@@ -1,0 +1,51 @@
+# Architecture and build handoff
+
+## Scope preserved from Stage 1/2
+
+The implementation is limited to comparing two notices for one school. The public workflow is:
+
+`create_case` -> `freeze_case` -> `assess` -> optional bounded `retry_unresolved`.
+
+The persisted record keeps the Stage 2 fields: owner, school ID, two URLs, dates, lifecycle state, outcome, declared revisions, evidence digest, and retry count. The outcome vocabulary is unchanged: `MATCH`, `CONFLICTING_DATES`, `ONE_SOURCE_OLDER`, `INSUFFICIENT_NOTICE`, and `UNRESOLVED`.
+
+Date-only ISO values are accepted. Local timestamps, HTTP `Date`/`Last-Modified`, retrieval order, and page timestamps are not revision authority. Missing identity or declared revision remains `UNRESOLVED`; missing closure/reopen data follows the Stage 2 insufficiency rule; an explicit unknown-duration declaration permits an empty reopen date.
+
+## Minimal implementation adaptations
+
+### `STAGE 1/2 IMPLEMENTATION ADAPTATION`
+
+- Original choice: use the web response status field shown in the current web-access documentation as `status_code`.
+- Verified issue/authority: the installed official cached Direct Mode runner `py-genlayer` `1jb45aa8ynh2a9c9xn3b7qqh8sm5q93hwfp7jqmwsfhh8jpz09h6` exposes `Response.status`; the local probe failed with `AttributeError` when using `status_code`.
+- Replacement: use `response.status` and map `404/410` to `MISSING`, `0/429/5xx` to retryable `UNAVAILABLE`, and other non-2xx responses to `MALFORMED`.
+- Preserved outcomes: source identity, date comparison, declared revision semantics, retry behavior, and no HTTP timestamp authority are unchanged.
+- Affected verification: `test_probe.py` and `tests/test_contract.py` cover status handling, bounded extraction, disagreement, missing fields, and retryability.
+- Residual risk: the current online documentation and the cached runner differ on this field name; a fresh Studio schema/runtime probe is required before PRE_DEPLOY.
+
+- Original choice: follow the current documentation's dependency prologue alone.
+- Verified issue/authority: the build experience record requires the runner version line before the dependency manifest for the live text runner, while current lint accepts both.
+- Replacement: retain `# v0.1.0` before the `Depends` line in the exact contract source.
+- Preserved outcomes: no product or trust-boundary change.
+- Affected verification: `genvm-lint check`, schema, typecheck, Direct Mode tests, and the pre-lock probe all pass.
+- Residual risk: the exact Studio runner/version must be recorded at PRE_DEPLOY; no deployment is authorized by this local result.
+
+- Original choice: use `retry_count` as a bounded attempt counter.
+- Verified issue/authority: the first implementation counted the initial assessment as a retry, causing the third retry boundary to be off by one.
+- Replacement: increment `retry_count` only when `retry_unresolved` is called; the initial assessment leaves it at zero, and the third retry produces terminal `ASSESSED:UNRESOLVED`.
+- Preserved outcomes: the Stage 2 bounded-retry workflow is unchanged, with clearer counter semantics.
+- Affected verification: retry boundary regression in `tests/test_contract.py`.
+
+## Trust boundary
+
+Fetched notice bodies are inserted between explicit untrusted-data markers in the extraction prompt. Embedded instructions, commands, policies, and output-format requests are ignored. Only the fixed JSON fields are normalized and used. Leader and validator independently derive the same canonical JSON summary; raw reasoning is not compared.
+
+## Evidence and release boundary
+
+Local Direct Mode is implementation evidence only. Before PRE_DEPLOY, the exact source hash, dependency/runtime version, schema, and anonymous-review package must be assembled. Studio deployment, live E2E, GitHub, Vercel, and final release evidence are not complete in this checkpoint.
+
+## Experience entries applied
+
+- Evidence unavailability is separated from a substantive negative result: transport `0`, `429`, and `5xx` remain `UNRESOLVED` and retryable; exact `404/410` is represented separately as `MISSING` before the decision layer.
+- Production-shaped web/runtime values are used in mocks, and the probe verifies the actual response shape instead of relying on a permissive fake.
+- Storage and nondeterminism are isolated: primitive URL/ID values are captured before the nondeterministic block, and the probe exercises storage copy/readback.
+- Version-sensitive runner header ordering is preserved and explicitly held for Studio verification.
+

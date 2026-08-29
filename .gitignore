@@ -1,0 +1,10 @@
+AGENTS.md
+CLAUDE.md
+.env
+.pytest_cache/
+__pycache__/
+*.pyc
+artifacts/
+node_modules/
+dist/
+

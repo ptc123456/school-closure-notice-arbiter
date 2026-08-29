@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>School Closure Notice Arbiter</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <main class="shell">
+      <header class="hero">
+        <p class="eyebrow">GENLAYER · STUDIONET</p>
+        <h1>School Closure<br /><span>Notice Arbiter</span></h1>
+        <p class="lede">Compare two published notices. Keep the evidence visible. Never guess which source is newer.</p>
+        <div class="wallet-row">
+          <button id="connect" class="button primary">Connect wallet</button>
+          <span id="wallet-status" class="status">Disconnected after reload</span>
+        </div>
+      </header>
+
+      <section class="card">
+        <div class="section-heading"><span>01</span><h2>Case details</h2></div>
+        <label>Contract address<input id="contract" placeholder="0x…" autocomplete="off" /></label>
+        <label>Case ID<input id="case-id" value="school-closure-01" autocomplete="off" /></label>
+        <label>School ID<input id="school-id" placeholder="district-school-id" autocomplete="off" /></label>
+        <div class="two-up">
+          <label>Notice A URL<input id="url-a" type="url" placeholder="https://…" /></label>
+          <label>Notice B URL<input id="url-b" type="url" placeholder="https://…" /></label>
+        </div>
+        <div class="actions">
+          <button id="create" class="button" disabled>Create case</button>
+          <button id="freeze" class="button" disabled>Freeze case</button>
+          <button id="assess" class="button accent" disabled>Assess notices</button>
+          <button id="retry" class="button" disabled>Retry unresolved</button>
+        </div>
+      </section>
+
+      <section class="card readback-card">
+        <div class="section-heading"><span>02</span><h2>Authoritative readback</h2></div>
+        <div id="readback" class="readback empty">Connect a wallet and enter a deployed contract address.</div>
+        <button id="read" class="button" disabled>Read case</button>
+      </section>
+
+      <section id="activity" class="activity" aria-live="polite">
+        <span class="dot"></span><span id="activity-text">Ready. No transaction has been submitted.</span>
+      </section>
+    </main>
+    <dialog id="chooser">
+      <form method="dialog" class="chooser-card">
+        <button class="close" value="cancel" aria-label="Close">×</button>
+        <p class="eyebrow">EIP-6963</p>
+        <h2>Choose a wallet</h2>
+        <p class="muted">Select the provider you want this task to use.</p>
+        <div id="providers" class="provider-list"></div>
+      </form>
+    </dialog>
+    <script type="module" src="./app.js"></script>
+  </body>
+</html>
+
