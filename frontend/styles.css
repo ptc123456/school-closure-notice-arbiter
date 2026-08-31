@@ -27,7 +27,11 @@ input:focus { border-color: #b6e26f; box-shadow: 0 0 0 3px #b6e26f22; }
 .readback pre { margin: 0; color: #dbe8d2; white-space: pre-wrap; font: 13px/1.55 ui-monospace, monospace; }
 .readback-card .button { margin-top: 14px; }
 .activity { display: flex; align-items: center; gap: 10px; margin: 18px 3px; color: #a9b4ab; font: 13px ui-monospace, monospace; }
+.activity.error, .error { color: #f19b8d; }
 .dot { width: 8px; height: 8px; border-radius: 50%; background: #b6e26f; box-shadow: 0 0 14px #b6e26f; }
+.tx-details { display: inline-flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.tx-details code { color: #dbe8d2; font-size: 11px; }
+.tx-details button, .tx-details a { color: #b6e26f; background: none; border: 0; padding: 0; font: inherit; cursor: pointer; text-decoration: underline; }
 dialog { border: 0; padding: 0; background: transparent; color: inherit; }
 dialog::backdrop { background: #050807bb; backdrop-filter: blur(5px); }
 .chooser-card { position: relative; width: min(420px, calc(100vw - 32px)); background: #171c1b; border: 1px solid #405044; border-radius: 18px; padding: 26px; box-shadow: 0 24px 80px #0008; }
@@ -37,4 +41,3 @@ dialog::backdrop { background: #050807bb; backdrop-filter: blur(5px); }
 .provider:hover { border-color: #b6e26f; }
 .provider img { width: 28px; height: 28px; border-radius: 7px; }
 @media (max-width: 650px) { .shell { padding-top: 38px; } .two-up { grid-template-columns: 1fr; gap: 0; } .card { padding: 18px; } }
-

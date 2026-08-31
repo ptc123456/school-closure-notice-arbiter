@@ -43,18 +43,21 @@
 
       <section id="activity" class="activity" aria-live="polite">
         <span class="dot"></span><span id="activity-text">Ready. No transaction has been submitted.</span>
+        <span id="tx-details" class="tx-details" hidden>
+          <code id="tx-hash"></code><button id="copy-tx" type="button">Copy ID</button><a id="explorer-link" target="_blank" rel="noreferrer">View transaction</a>
+        </span>
       </section>
     </main>
-    <dialog id="chooser">
+    <dialog id="chooser" aria-labelledby="wallet-title">
       <form method="dialog" class="chooser-card">
         <button class="close" value="cancel" aria-label="Close">×</button>
-        <p class="eyebrow">EIP-6963</p>
-        <h2>Choose a wallet</h2>
+        <p class="eyebrow">WALLET CONNECTION</p>
+        <h2 id="wallet-title">Choose a wallet</h2>
         <p class="muted">Select the provider you want this task to use.</p>
+        <p id="wallet-error" class="error" role="alert" hidden></p>
         <div id="providers" class="provider-list"></div>
       </form>
     </dialog>
-    <script type="module" src="./app.js"></script>
+    <script type="module" src="./app.js?v=20260831"></script>
   </body>
 </html>
-
