@@ -41,6 +41,13 @@ Date-only ISO values are accepted. Local timestamps, HTTP `Date`/`Last-Modified`
 - Affected verification: `node --check frontend/app.js`, local no-wallet browser smoke with no console errors, and the exact-source PRE_DEPLOY package.
 - Residual risk: live wallet signing, Studio execution/finality, and authoritative readback remain blocked until anonymous PRE_DEPLOY approval.
 
+- Original choice: clear the transaction UI state in `finally` after waiting for a receipt.
+- Verified issue/authority: a browser reload or transient readback failure can lose the only transaction identity and invite a duplicate write; the current GenLayerJS transaction guidance exposes both receipt polling and transaction lookup for reconciliation.
+- Replacement: persist one canonical pending hash plus method/case metadata immediately after `writeContract` returns; keep the write lock while finality, consensus, execution, and method-specific readback are reconciled; clear storage only after successful readback.
+- Preserved behavior: selected-provider session validation still runs before each read/write, and a failed or incomplete reconciliation never silently submits a replacement.
+- Affected verification: `frontend/regression.test.mjs` covers pre-await single-flight, persistence/restart reconciliation, consensus/finality/execution proof, provider rejection/order, listener cleanup, and focus wrapping.
+- Residual risk: if the wallet or RPC remains unavailable, the pending record intentionally remains until the same hash can be reconciled.
+
 ## Trust boundary
 
 Fetched notice bodies are inserted between explicit untrusted-data markers in the extraction prompt. Embedded instructions, commands, policies, and output-format requests are ignored. Only the fixed JSON fields are normalized and used. Leader and validator independently derive the same canonical JSON summary; raw reasoning is not compared.

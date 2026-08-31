@@ -8,8 +8,10 @@ It implements:
 - selected-provider-only account, chain-switch, signing, and event handling;
 - disconnected initial state after reload;
 - Studionet chain setup;
-- `FINALIZED` receipt polling, semantic execution-success checking, and contract readback;
-- a single in-flight transaction guard.
+- `FINALIZED` receipt polling, explicit consensus/execution proof, and contract readback;
+- a synchronous single-flight transaction guard;
+- one restart-safe pending hash with reconciliation before another write is enabled.
+
+The transaction coordinator never clears its pending record after a receipt alone. It requires final status, an accepted consensus result, `FINISHED_WITH_RETURN`, and a method-specific `get_case` readback. A reload or readback failure keeps the same hash visible and blocks duplicate submission.
 
 Enter the deployed contract address after PRE_DEPLOY and deployment. The static page has not been presented as live evidence; browser/E2E verification is a later checkpoint.
-

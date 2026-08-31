@@ -1,6 +1,6 @@
 import { createClient } from "https://esm.sh/genlayer-js@1.1.8?bundle";
 import { studionet } from "https://esm.sh/genlayer-js@1.1.8/chains?bundle";
-import { ExecutionResult, TransactionStatus } from "https://esm.sh/genlayer-js@1.1.8/types?bundle";
+import { attachSessionListeners, connectWallet, focusTrap, readPending, reconcilePending, runTransaction } from "./logic.js";
 
 const $ = (id) => document.getElementById(id);
 const WALLET_SPECS = [
@@ -9,7 +9,7 @@ const WALLET_SPECS = [
   { label: "Rabby", rdns: ["io.rabby"], flags: ["isRabby"] },
 ];
 const LEGACY_UUID = "legacy-supported-wallet";
-const state = { providers: new Map(), providerUuids: new WeakMap(), provider: null, address: null, client: null, busy: false, listeners: [] };
+const state = { providers: new Map(), providerUuids: new WeakMap(), provider: null, address: null, client: null, busy: false, pending: readPending(window.localStorage), listeners: [] };
 
 function isProvider(value) { return Boolean(value && typeof value === "object" && typeof value.request === "function"); }
 
@@ -62,7 +62,8 @@ function requireConnected() {
 
 function setButtons() {
   const connected = Boolean(state.client && state.address);
-  for (const id of ["create", "freeze", "assess", "retry", "read"]) $(id).disabled = !connected || state.busy;
+  for (const id of ["create", "freeze", "assess", "retry", "read"]) $(id).disabled = !connected || state.busy || Boolean(state.pending);
+  $("resume").disabled = !connected || !state.pending;
 }
 
 function renderProviders() {
@@ -108,28 +109,26 @@ async function switchToStudionet(provider) {
 async function connect(detail) {
   try {
     setWalletError("");
-    const accounts = await detail.provider.request({ method: "eth_requestAccounts" });
-    if (!accounts?.[0]) throw new Error("The wallet returned no account.");
-    await switchToStudionet(detail.provider);
+    const account = await connectWallet(detail.provider, switchToStudionet);
     disconnect("Switching wallet session…");
     state.provider = detail.provider;
-    state.address = accounts[0];
+    state.address = account;
     state.client = createClient({ chain: studionet, account: state.address, provider: state.provider });
     $("wallet-status").textContent = detail.info.name + ": " + state.address.slice(0, 6) + "…" + state.address.slice(-4);
     setActivity("Connected to " + detail.info.name + " on Studionet.");
     const onAccountsChanged = () => disconnect("Account changed. Connect again.");
     const onChainChanged = () => disconnect("Network changed. Connect again.");
     const onDisconnect = () => disconnect("Wallet disconnected. Connect again.");
-    detail.provider.on?.("accountsChanged", onAccountsChanged);
-    detail.provider.on?.("chainChanged", onChainChanged);
-    detail.provider.on?.("disconnect", onDisconnect);
-    state.listeners = [[detail.provider, "accountsChanged", onAccountsChanged], [detail.provider, "chainChanged", onChainChanged], [detail.provider, "disconnect", onDisconnect]];
+    const cleanup = attachSessionListeners(detail.provider, { accountsChanged: onAccountsChanged, chainChanged: onChainChanged, disconnect: onDisconnect });
+    state.listeners = [[cleanup]];
     $("chooser").close();
+    setButtons();
+    if (state.pending) await reconcileSavedTransaction();
   } catch (error) { setWalletError(error.message || "The wallet could not connect."); }
 }
 
 function disconnect(message = "Disconnected after reload") {
-  for (const [provider, event, handler] of state.listeners) provider.removeListener?.(event, handler);
+  for (const [cleanup] of state.listeners) cleanup();
   state.listeners = [];
   state.provider = null; state.address = null; state.client = null;
   $("wallet-status").textContent = message; setActivity(message); setButtons();
@@ -152,14 +151,19 @@ async function validateWalletSession() {
   }
 }
 
-async function readCase() {
-  const address = requireConnected();
-  await validateWalletSession();
-  const result = await state.client.readContract({ address, functionName: "get_case", args: [$("case-id").value.trim()] });
+function renderReadback(result) {
   $("readback").classList.remove("empty");
   const pre = document.createElement("pre"); pre.textContent = JSON.stringify(result, null, 2);
   $("readback").replaceChildren(pre);
   return result;
+}
+
+async function readCase(addressOverride, caseIdOverride, validate = true) {
+  const address = addressOverride || requireConnected();
+  const caseId = caseIdOverride || $("case-id").value.trim();
+  if (validate) await validateWalletSession();
+  const result = await state.client.readContract({ address, functionName: "get_case", args: [caseId] });
+  return renderReadback(result);
 }
 
 function showTransaction(hash) {
@@ -167,25 +171,42 @@ function showTransaction(hash) {
   $("tx-hash").textContent = hash;
   $("explorer-link").href = "https://explorer-studio.genlayer.com/tx/" + hash;
   $("copy-tx").onclick = async () => { await navigator.clipboard.writeText(hash); setActivity("Transaction ID copied."); };
+  $("resume").hidden = true;
+}
+
+function showPending(pending) {
+  showTransaction(pending.hash);
+  $("resume").hidden = false;
+  setActivity("Transaction " + pending.hash.slice(0, 10) + "… is pending reconciliation. Do not submit another transaction.", true);
+  setButtons();
+}
+
+async function reconcileSavedTransaction() {
+  if (!state.pending) return;
+  showPending(state.pending);
+  try {
+    const recovered = await reconcilePending({ state, storage: window.localStorage, client: state.client, validateWalletSession, readback: (pending) => readCase(pending.contractAddress, pending.caseId, false) });
+    showTransaction(recovered.hash);
+    setActivity("Recovered transaction finalized and verified from the contract.");
+    setButtons();
+  } catch (error) {
+    setActivity(error.message || "Pending transaction still needs reconciliation.", true);
+    setButtons();
+  }
 }
 
 async function transact(functionName, args) {
+  if (state.busy || state.pending) return;
   const address = requireConnected();
-  if (state.busy) return;
-  await validateWalletSession();
-  state.busy = true; setButtons();
+  const pending = { contractAddress: address, caseId: $("case-id").value.trim(), schoolId: $("school-id").value.trim(), functionName, args };
+  setActivity("Confirm the transaction in your wallet…");
   try {
-    setActivity("Confirm the transaction in your wallet…");
-    const hash = await state.client.writeContract({ address, functionName, args, value: BigInt(0) });
-    setActivity("Transaction submitted. Waiting for network confirmation…");
-    const receipt = await state.client.waitForTransactionReceipt({ hash, status: TransactionStatus.FINALIZED, interval: 5000, retries: 10 });
-    showTransaction(hash);
-    if (receipt.txExecutionResultName !== ExecutionResult.FINISHED_WITH_RETURN) throw new Error("The transaction was confirmed but the contract did not complete successfully.");
+    const completed = await runTransaction({ state, storage: window.localStorage, client: state.client, pending, validateWalletSession, onPending: showPending, readback: (saved) => readCase(saved.contractAddress, saved.caseId, false) });
+    showTransaction(completed.hash);
     setActivity("Transaction confirmed. Checking the saved case…");
-    await readCase();
     setActivity("Case updated and verified from the contract.");
   } catch (error) { setActivity(error.message || String(error), true); }
-  finally { state.busy = false; setButtons(); }
+  setButtons();
 }
 
 const chooser = $("chooser");
@@ -196,15 +217,15 @@ chooser.addEventListener("keydown", (event) => {
   if (event.key !== "Tab") return;
   const focusable = [...chooser.querySelectorAll("button:not([disabled])")];
   if (!focusable.length) return;
-  const first = focusable[0]; const last = focusable[focusable.length - 1];
-  if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
-  else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
+  const next = focusTrap(focusable, document.activeElement, event.shiftKey);
+  if ((event.shiftKey && document.activeElement === focusable[0]) || (!event.shiftKey && document.activeElement === focusable.at(-1))) { event.preventDefault(); next.focus(); }
 });
 $("create").addEventListener("click", () => transact("create_case", [$("case-id").value.trim(), $("school-id").value.trim(), $("url-a").value.trim(), $("url-b").value.trim()]));
 $("freeze").addEventListener("click", () => transact("freeze_case", [$("case-id").value.trim()]));
 $("assess").addEventListener("click", () => transact("assess", [$("case-id").value.trim()]));
 $("retry").addEventListener("click", () => transact("retry_unresolved", [$("case-id").value.trim()]));
 $("read").addEventListener("click", async () => { try { await readCase(); setActivity("Authoritative readback completed."); } catch (error) { setActivity(error.message || String(error), true); } });
+$("resume").addEventListener("click", reconcileSavedTransaction);
 
 window.addEventListener("eip6963:announceProvider", (event) => {
   const detail = supportedDetail(event.detail);
@@ -218,3 +239,4 @@ queueMicrotask(() => {
   acceptProvider({ legacy: true, info: { uuid: LEGACY_UUID, name: spec.label, icon: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'/%3E", rdns: spec.rdns[0] }, provider: window.ethereum });
 });
 setButtons();
+if (state.pending) showPending(state.pending);
