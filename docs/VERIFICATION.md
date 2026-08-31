@@ -4,8 +4,9 @@ This document records the current local build checkpoint. It is not a PRE_DEPLOY
 
 ## Exact revision
 
-- Commit: `856279f7d060d68d666088f1fc81d0e7e475cb46`
-- Contract source SHA-256 at the committed revision: `7AE391A3E8000B0279D8DCABFD9FC04366C832AE83E586EF4B86A884EEA77EC4`
+- Contract/source commit: `a8bd6ea66fa7731e8f763b3dec443a3407927ba0`
+- Contract source SHA-256 at that commit: `3A1FBAD7B8D148A81765E02BF2F213E08457E8A37674CC9EC461B6785540E43F`
+- Current public-tree commit: recorded in the GitHub Presentation Pre-Push Report immediately before any push.
 - Contract: `SchoolClosureNoticeArbiter`
 - Network: Studionet is the intended release network; no contract is deployed yet.
 
@@ -48,4 +49,3 @@ powershell -ExecutionPolicy Bypass -File E:\Genlayer\scripts\audit-genlayer-proj
 ## Known limitations and next gate
 
 The cached Direct Mode runner is `py-genlayer:1jb45aa8ynh2a9c9xn3b7qqh8sm5q93hwfp7jqmwsfhh8jpz09h6` and exposes `Response.status`. The current online web-access documentation uses `status_code` in its example. This is recorded as a version-sensitive boundary; the exact Studio runtime must be probed before PRE_DEPLOY. No live evidence is inferred from the local green tests.
-
