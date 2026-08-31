@@ -10,6 +10,7 @@ This document records the current local build checkpoint. It is not a PRE_DEPLOY
 - Current public-tree commit: recorded in the GitHub Presentation Pre-Push Report immediately before any push; this document intentionally identifies the exact source/frontend commits rather than self-referencing a future documentation commit.
 - Contract: `SchoolClosureNoticeArbiter`
 - Network: Studionet is the intended release network; no contract is deployed yet.
+- Studio deployer/upgrader: `0x34b92E6553eaCA11A00A9d86d75d8a7881779D78`, directly selected in the signed-in GenLayer Studio session; no signature has been requested.
 
 ## Contract inventory
 
@@ -40,6 +41,7 @@ powershell -ExecutionPolicy Bypass -File E:\Genlayer\scripts\audit-genlayer-proj
 ## Live evidence status
 
 - Studio contract address: Not deployed; PRE_DEPLOY is required first.
+- Studio account selection: deployer/upgrader `0x34b92E6553eaCA11A00A9d86d75d8a7881779D78` selected and recorded; no deployment/signature/write sent.
 - Deployment transaction / Explorer: Not available.
 - Deployment-source parity: Not available until deployment.
 - Live web URL: Not deployed.
