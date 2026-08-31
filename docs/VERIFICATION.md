@@ -6,7 +6,8 @@ This document records the current local build checkpoint. It is not a PRE_DEPLOY
 
 - Contract/source commit: `a8bd6ea66fa7731e8f763b3dec443a3407927ba0`
 - Contract source SHA-256 at that commit: `3A1FBAD7B8D148A81765E02BF2F213E08457E8A37674CC9EC461B6785540E43F`
-- Current public-tree commit: recorded in the GitHub Presentation Pre-Push Report immediately before any push.
+- Frontend hardening commit: `4c6fdadd52d824b9d1fc8a261f8387c13cb0a4cc`
+- Current public-tree commit: recorded in the GitHub Presentation Pre-Push Report immediately before any push; this document intentionally identifies the exact source/frontend commits rather than self-referencing a future documentation commit.
 - Contract: `SchoolClosureNoticeArbiter`
 - Network: Studionet is the intended release network; no contract is deployed yet.
 
