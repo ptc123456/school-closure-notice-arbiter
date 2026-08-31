@@ -34,6 +34,13 @@ Date-only ISO values are accepted. Local timestamps, HTTP `Date`/`Last-Modified`
 - Preserved outcomes: the Stage 2 bounded-retry workflow is unchanged, with clearer counter semantics.
 - Affected verification: retry boundary regression in `tests/test_contract.py`.
 
+- Original choice: treat any announced browser provider as a usable wallet and expose the provider protocol in the chooser.
+- Verified issue/authority: the engineering gate requires a user-facing supported-wallet allowlist, graceful unsupported-wallet handling, session revalidation, and transaction identity/finality feedback; provider announcements and metadata are untrusted discovery input.
+- Replacement: map only the selected provider object to MetaMask, OKX Wallet, or Rabby; keep discovery details out of visible copy; show inline chooser errors; revalidate account and chain before reads/writes; clean up account/chain/disconnect listeners; and retain the transaction hash with an Explorer link and copy action.
+- Preserved behavior: no wallet request occurs before an explicit chooser selection, and no unavailable Studio/live result is claimed locally.
+- Affected verification: `node --check frontend/app.js`, local no-wallet browser smoke with no console errors, and the exact-source PRE_DEPLOY package.
+- Residual risk: live wallet signing, Studio execution/finality, and authoritative readback remain blocked until anonymous PRE_DEPLOY approval.
+
 ## Trust boundary
 
 Fetched notice bodies are inserted between explicit untrusted-data markers in the extraction prompt. Embedded instructions, commands, policies, and output-format requests are ignored. Only the fixed JSON fields are normalized and used. Leader and validator independently derive the same canonical JSON summary; raw reasoning is not compared.
@@ -48,4 +55,3 @@ Local Direct Mode is implementation evidence only. Before PRE_DEPLOY, the exact 
 - Production-shaped web/runtime values are used in mocks, and the probe verifies the actual response shape instead of relying on a permissive fake.
 - Storage and nondeterminism are isolated: primitive URL/ID values are captured before the nondeterministic block, and the probe exercises storage copy/readback.
 - Version-sensitive runner header ordering is preserved and explicitly held for Studio verification.
-
