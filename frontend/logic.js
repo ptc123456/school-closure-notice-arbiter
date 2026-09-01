@@ -5,6 +5,8 @@ export const SUCCESSFUL_EXECUTION = "FINISHED_WITH_RETURN";
 export const MIN_SPENDABLE_WEI = 10_000_000_000_000_000n;
 
 const METHODS = new Set(["create_case", "freeze_case", "assess", "retry_unresolved"]);
+const FINAL_STATUS_CODES = { 7: FINAL_STATUS };
+const CONSENSUS_RESULT_NAMES = { 6: SUCCESSFUL_CONSENSUS };
 const ADDRESS = /^0x[0-9a-fA-F]{40}$/;
 const HASH = /^0x[0-9a-fA-F]{64}$/;
 
@@ -57,9 +59,13 @@ export function writePending(storage, pending) {
 export function clearPending(storage) { storage.removeItem(PENDING_STORAGE_KEY); }
 
 export function transactionProof(receipt, transaction) {
-  const status = String(transaction?.statusName ?? transaction?.status_name ?? receipt?.statusName ?? receipt?.status_name ?? "").toUpperCase();
-  const consensus = String(transaction?.resultName ?? transaction?.result_name ?? transaction?.consensusResult ?? transaction?.consensus_result ?? "").toUpperCase();
-  const execution = String(transaction?.txExecutionResultName ?? transaction?.tx_execution_result_name ?? receipt?.txExecutionResultName ?? receipt?.tx_execution_result_name ?? "").toUpperCase();
+  const statusValue = transaction?.statusName ?? transaction?.status_name ?? receipt?.statusName ?? receipt?.status_name ?? FINAL_STATUS_CODES[transaction?.status];
+  const status = String(statusValue ?? "").toUpperCase();
+  const consensusValue = transaction?.resultName ?? transaction?.result_name ?? transaction?.consensusResult ?? transaction?.consensus_result ?? CONSENSUS_RESULT_NAMES[transaction?.result];
+  const consensus = String(consensusValue ?? "").toUpperCase();
+  const leaderReceipt = transaction?.consensus_data?.leader_receipt?.find((entry) => entry?.result?.status === "return" || entry?.execution_result === "SUCCESS");
+  const executionValue = transaction?.txExecutionResultName ?? transaction?.tx_execution_result_name ?? receipt?.txExecutionResultName ?? receipt?.tx_execution_result_name ?? (leaderReceipt?.result?.status === "return" ? SUCCESSFUL_EXECUTION : "");
+  const execution = String(executionValue).toUpperCase();
   if (status !== FINAL_STATUS) throw new Error("Transaction is not finalized by the GenLayer network.");
   if (consensus !== SUCCESSFUL_CONSENSUS) throw new Error("Transaction did not reach MAJORITY_AGREE consensus.");
   if (execution !== SUCCESSFUL_EXECUTION) throw new Error("The finalized transaction did not complete successfully.");

@@ -73,6 +73,13 @@ test("consensus, finality, and execution are all required", () => {
   assert.deepEqual(transactionProof({}, { statusName: "FINALIZED", resultName: "MAJORITY_AGREE", txExecutionResultName: "FINISHED_WITH_RETURN" }), {
     status: "FINALIZED", consensus: "MAJORITY_AGREE", execution: "FINISHED_WITH_RETURN",
   });
+  assert.deepEqual(transactionProof({}, {
+    status: 7,
+    result: 6,
+    consensus_data: { leader_receipt: [{ result: { status: "return", payload: { raw: [70, 82, 79, 90, 69, 78] } } }] },
+  }), {
+    status: "FINALIZED", consensus: "MAJORITY_AGREE", execution: "FINISHED_WITH_RETURN",
+  });
   assert.throws(() => transactionProof({}, { statusName: "FINALIZED", resultName: "MAJORITY_DISAGREE", txExecutionResultName: "FINISHED_WITH_RETURN" }), /MAJORITY_AGREE/);
   assert.throws(() => transactionProof({}, { statusName: "FINALIZED", resultName: "AGREE", txExecutionResultName: "FINISHED_WITH_RETURN" }), /MAJORITY_AGREE/);
   assert.throws(() => transactionProof({}, { statusName: "FINALIZED", resultName: "SUCCESS", txExecutionResultName: "FINISHED_WITH_RETURN" }), /MAJORITY_AGREE/);
