@@ -134,7 +134,7 @@ async function connect(detail) {
   } catch (error) { setWalletError(error.message || "The wallet could not connect."); }
 }
 
-function disconnect(message = "Disconnected after reload") {
+function disconnect(message = "Not connected · connect a wallet to begin") {
   for (const [cleanup] of state.listeners) cleanup();
   state.listeners = [];
   state.provider = null; state.walletKey = null; state.address = null; state.client = null; state.balance = null; state.balanceReady = false;
