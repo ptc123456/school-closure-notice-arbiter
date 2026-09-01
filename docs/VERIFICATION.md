@@ -91,7 +91,27 @@ Invoke-RestMethod -Uri 'https://studio.genlayer.com/api' -Method Post -ContentTy
 
 Result: JSON-RPC success; schema contains exactly 6 methods (4 write, 2 view), with `create_case`, `freeze_case`, `assess`, `retry_unresolved`, `get_case`, and `get_case_state`. No contract address, transaction hash, signature, or chain write was produced.
 
-Targeted Studio runtime control: `probe_status_code_contract.py` (with an explicit empty constructor required by the Studio runner) was uploaded to the signed-in Studio Run Debug workspace on 2026-09-01. The direct no-write schema call then passed for the isolated probe (`check(url: string) -> int`), but Run Debug still reported “You need at least one validator before you can deploy or interact with a contract”. The hosted no-write `gen_call` deploy control, tested with both the isolated probe and a minimal constructor/view contract, returned `Contract 0x0000000000000000000000000000000000000000 not found`; it did not execute the method. Studio logs identify GenVM `v0.2.16-x86_64-linux-release`. No simulation, deploy, signature, or write was sent. The disputed field therefore remains unverified in hosted Studio and blocks PRE_DEPLOY.
+Targeted Studio runtime control: `probe_status_code_contract.py` (with an explicit empty constructor required by the Studio runner) was uploaded to the signed-in Studio Run Debug workspace on 2026-09-01. The direct no-write schema call then passed for the isolated probe (`check(url: string) -> int`). The first Run Debug control reported “You need at least one validator before you can deploy or interact with a contract”; after cooldown and switching to the recorded account, the Validators page showed 20 validators, but the next Run Debug schema refresh hit `Rate limit exceeded: 30 requests per minute`. The hosted no-write `gen_call` deploy control, tested with both the isolated probe and a minimal constructor/view contract, returned `Contract 0x0000000000000000000000000000000000000000 not found`; it did not execute the method. Studio logs identify GenVM `v0.2.16-x86_64-linux-release`. No simulation, deploy, signature, or write was sent. The disputed field therefore remains unverified in hosted Studio and blocks PRE_DEPLOY.
+
+After two 55-second cooldowns, the same signed-in Studio session was switched to the recorded account `0x34b92E6553eaCA11A00A9d86d75d8a7881779D78`; the Validators page then showed `Validators 20` at 2026-09-01 09:12 +07:00. The isolated no-write `gen_call` deploy was retried with the installed `genlayer_py` encoder and the exact probe source:
+
+```powershell
+$source = [Text.Encoding]::UTF8.GetBytes((Get-Content .\probe_status_code_contract.py -Raw -Encoding utf8))
+$codeHex = '0x' + (($source | ForEach-Object { $_.ToString('x2') }) -join '')
+$data = @'
+from genlayer_py.abi import calldata
+from genlayer_py.abi.transactions import serialize
+from genlayer_py.contracts.utils import make_calldata_object
+import sys
+code = bytes.fromhex(sys.argv[1][2:])
+print(serialize([code, calldata.encode(make_calldata_object(method=None, args=None, kwargs=None)), False]))
+'@ | py -3.13 - $codeHex
+$request = @{ jsonrpc = '2.0'; id = 31; method = 'gen_call'; params = @(@{ type = 'deploy'; data = $data.Trim(); from = '0x34b92E6553eaCA11A00A9d86d75d8a7881779D78'; to = '0x0000000000000000000000000000000000000000'; status = 'finalized' }) } | ConvertTo-Json -Depth 8 -Compress
+Invoke-RestMethod -Uri 'https://studio.genlayer.com/api' -Method Post -ContentType 'application/json' -Body $request
+# {"jsonrpc":"2.0","error":{"code":-32001,"message":"Contract 0x0000000000000000000000000000000000000000 not found","data":{"contract_address":"0x0000000000000000000000000000000000000000}},"id":31}
+```
+
+The payload is accepted far enough to return the hosted resource-not-found response, but the deploy probe method is not executed. This remains a hosted Studio control failure, not a runtime verdict for `status_code` versus `status`.
 
 ## Live evidence status
 
