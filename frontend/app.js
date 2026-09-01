@@ -1,6 +1,6 @@
 import { createClient } from "https://esm.sh/genlayer-js@1.1.8?bundle";
 import { studionet } from "https://esm.sh/genlayer-js@1.1.8/chains?bundle";
-import { MIN_SPENDABLE_WEI, attachSessionListeners, connectWallet, focusTrap, readPending, reconcilePending, runTransaction } from "./logic.js";
+import { MIN_SPENDABLE_WEI, attachSessionListeners, connectWallet, focusTrap, inspectPending, reconcilePending, runTransaction } from "./logic.js";
 
 const $ = (id) => document.getElementById(id);
 const WALLET_SPECS = [
@@ -9,7 +9,8 @@ const WALLET_SPECS = [
   { label: "Rabby", rdns: ["io.rabby"], flags: ["isRabby"] },
 ];
 const LEGACY_UUID = "legacy-supported-wallet";
-const state = { providers: new Map(), providerUuids: new WeakMap(), provider: null, walletKey: null, address: null, client: null, balance: null, balanceReady: false, busy: false, pending: readPending(window.localStorage), listeners: [] };
+const storedPending = inspectPending(window.localStorage);
+const state = { providers: new Map(), providerUuids: new WeakMap(), provider: null, walletKey: null, address: null, client: null, balance: null, balanceReady: false, busy: false, pending: storedPending.status === "VALID" ? storedPending.pending : storedPending.status === "INVALID" ? { invalid: true, status: "INVALID" } : null, listeners: [] };
 
 function isProvider(value) { return Boolean(value && typeof value === "object" && typeof value.request === "function"); }
 
@@ -203,6 +204,13 @@ function showTransaction(hash) {
 }
 
 function showPending(pending) {
+  if (pending.invalid) {
+    $("tx-details").hidden = true;
+    $("resume").hidden = true;
+    setActivity("Invalid transaction recovery metadata detected. Writes are locked until the record is safely remediated.", true);
+    setButtons();
+    return;
+  }
   showTransaction(pending.hash);
   $("resume").hidden = false;
   const suffix = pending.volatile ? " Recovery storage failed; keep this tab open." : "";

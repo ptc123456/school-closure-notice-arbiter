@@ -5,6 +5,7 @@ import {
   attachSessionListeners,
   connectWallet,
   focusTrap,
+  inspectPending,
   MIN_SPENDABLE_WEI,
   readPending,
   reconcilePending,
@@ -115,6 +116,18 @@ test("pending recovery requires the same account and provider", async () => {
   await assert.rejects(reconcilePending({ state, storage: store, client: { waitForTransactionReceipt: async () => { waited = true; } }, account: "0x3333333333333333333333333333333333333333", walletKey: "io.metamask", validateWalletSession: async () => {}, readback: async () => ({ state: "DRAFT" }) }), /different wallet session/);
   assert.equal(waited, false);
   assert.equal(state.busy, true);
+});
+
+test("malformed pending storage is invalid, retained, and fail-closed", async () => {
+  const store = storage();
+  store.setItem(PENDING_STORAGE_KEY, "{malformed");
+  assert.deepEqual(inspectPending(store), { status: "INVALID", pending: null });
+  const state = { busy: false, pending: null };
+  await assert.rejects(reconcilePending({ state, storage: store, client: {}, account: "0x3333333333333333333333333333333333333333", walletKey: "io.metamask", validateWalletSession: async () => {}, readback: async () => ({ state: "DRAFT" }) }), /invalid; writes are locked/);
+  assert.equal(state.busy, true);
+  assert.equal(store.getItem(PENDING_STORAGE_KEY), "{malformed");
+  const blocked = await runTransaction({ state, storage: store, client: { writeContract: async () => { throw new Error("must not write"); } }, pending: {}, validateWalletSession: async () => {}, readback: async () => ({ state: "DRAFT" }) });
+  assert.deepEqual(blocked, { started: false });
 });
 
 test("session listeners clean up and focus trap wraps both directions", () => {

@@ -21,15 +21,20 @@ function validPending(pending) {
   );
 }
 
-export function readPending(storage) {
+export function inspectPending(storage) {
   try {
     const raw = storage?.getItem(PENDING_STORAGE_KEY);
-    if (!raw) return null;
+    if (!raw) return { status: "ABSENT", pending: null };
     const pending = JSON.parse(raw);
-    return validPending(pending) ? pending : null;
+    return validPending(pending) ? { status: "VALID", pending } : { status: "INVALID", pending: null };
   } catch {
-    return null;
+    return { status: "INVALID", pending: null };
   }
+}
+
+export function readPending(storage) {
+  const inspected = inspectPending(storage);
+  return inspected.status === "VALID" ? inspected.pending : null;
 }
 
 export function preflightStorage(storage) {
@@ -122,6 +127,11 @@ export async function runTransaction({ state, storage, client, pending, validate
 export async function reconcilePending({ state, storage, client, account, walletKey, validateWalletSession, readback }) {
   const pending = state.pending || readPending(storage);
   if (!pending) {
+    if (inspectPending(storage).status === "INVALID") {
+      state.pending = { invalid: true, status: "INVALID" };
+      state.busy = true;
+      throw new Error("Pending transaction recovery metadata is invalid; writes are locked until it is safely remediated.");
+    }
     state.pending = null;
     state.busy = false;
     return null;

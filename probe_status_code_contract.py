@@ -5,6 +5,9 @@ from genlayer import *
 
 
 class ProbeStatusCode(gl.Contract):
+    def __init__(self):
+        pass
+
     @gl.public.write
     def check(self, url: str) -> int:
         def leader_fn():

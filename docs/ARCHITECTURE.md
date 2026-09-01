@@ -19,7 +19,7 @@ Date-only ISO values are accepted. Local timestamps, HTTP `Date`/`Last-Modified`
 - Replacement: use `response.status` and map `404/410` to `MISSING`, `0/429/5xx` to retryable `UNAVAILABLE`, and other non-2xx responses to `MALFORMED`.
 - Preserved outcomes: source identity, date comparison, declared revision semantics, retry behavior, and no HTTP timestamp authority are unchanged.
 - Affected verification: `test_probe.py` and `tests/test_contract.py` cover status handling, bounded extraction, disagreement, missing fields, and retryability.
-- Residual risk: the current online documentation and the cached runner differ on this field name. The 2026-09-01 no-write schema probe passed, while the targeted Studio Run Debug runtime control was blocked by the session's `Rate limit exceeded: 30 requests per minute`; that control is recorded and not claimed as a pass.
+- Residual risk: the current online documentation and the cached runner differ on this field name. The 2026-09-01 no-write schema probe passed for both the production source and isolated probe, but hosted Studio Run Debug could not execute the isolated method because the session reported no usable validator and hosted `gen_call` deploy returned a zero-address not-found error; the disputed field remains unverified.
 
 - Original choice: follow the current documentation's dependency prologue alone.
 - Verified issue/authority: the build experience record requires the runner version line before the dependency manifest for the live text runner, while current lint accepts both.
