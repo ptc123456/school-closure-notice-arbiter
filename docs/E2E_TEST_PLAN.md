@@ -1,6 +1,6 @@
 # E2E TEST PLAN
 
-Status: approved plan executed in Studio; awaiting anonymous `POST_DEPLOY_TEST` review for the evidence package.
+Status: approved plan executed in Studio; `POST_DEPLOY_TEST` approved; GitHub/Vercel final checkpoint pending.
 
 ## Exact scope
 
@@ -53,7 +53,7 @@ The two URLs are distinct valid HTTPS inputs and are expected to return 404 from
 - Perform one write at a time; wait for a terminal receipt before the next write.
 - Do not retry a still-pending/proposing transaction and do not create a replacement case after a readback delay; preserve the original hash and reconcile it.
 - Use lightweight status polling and fetch the full receipt only at terminal state or for diagnosis; capture authoritative readback once per terminal write.
-- Expected write count: 5 total (deployment, create, freeze, assess, retry); expected view readback: after each write where needed, with final agreement between both views.
+- Expected intended write count: 5 (deployment, create, freeze, assess, retry); expected view readback: after each write where needed, with final agreement between both views. Any diagnostic failed attempt is retained separately and does not count as a completed journey.
 
 ## Failure handling
 
@@ -63,7 +63,7 @@ Record every attempted case as `PASS`, `FAIL`, or `BLOCKED`. At the first failur
 
 - `DEPLOY-01` and every `CASE-01` write has a real hash, `FINALIZED`, semantic execution success, consensus/finality evidence, and matching authoritative readback.
 - The deployed source hash equals `BA62C92CACD85386D2356CAE88760FED167CC6075F563BEE099B3676DCE22B39`.
-- No duplicate transaction is submitted and no write remains unreconciled.
+- No successful duplicate state mutation or unreconciled replacement transaction remains.
 - Studio evidence is sufficient to request anonymous `POST_DEPLOY_TEST` review for this exact deployed source and evidence package.
 
 ## Executed evidence

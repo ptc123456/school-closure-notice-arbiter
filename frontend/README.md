@@ -14,4 +14,4 @@ It implements:
 
 The transaction coordinator never clears its pending record after a receipt alone. It requires final status, an accepted consensus result, `FINISHED_WITH_RETURN`, and a method-specific `get_case` readback. A reload or readback failure keeps the same hash visible and blocks duplicate submission.
 
-Enter the deployed contract address after PRE_DEPLOY and deployment. The static page has not been presented as live evidence; browser/E2E verification is a later checkpoint.
+Enter the deployed Studionet contract address `0x03E832036EDBCF96AEa03D64AB41Bc79d63b9A6f` to use the static page. Studio E2E is approved for the deployed source; final Vercel E2E remains a later release checkpoint.

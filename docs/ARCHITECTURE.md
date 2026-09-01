@@ -18,15 +18,15 @@ Date-only ISO values are accepted. Local timestamps, HTTP `Date`/`Last-Modified`
 - Verified issue/authority: the installed official cached Direct Mode runner `py-genlayer` `1jb45aa8ynh2a9c9xn3b7qqh8sm5q93hwfp7jqmwsfhh8jpz09h6` exposes `Response.status`; the local probe failed with `AttributeError` when using `status_code`.
 - Replacement: `_response_status` prefers documented `response.status_code`, falls back to cached-runner `response.status`, and returns `-1` when neither shape is a valid integer; map `404/410` to `MISSING`, `0/429/5xx` to retryable `UNAVAILABLE`, and other non-2xx responses to `MALFORMED`.
 - Preserved outcomes: source identity, date comparison, declared revision semantics, retry behavior, and no HTTP timestamp authority are unchanged.
-- Affected verification: `test_probe.py` and `tests/test_contract.py` cover status handling, bounded extraction, disagreement, missing fields, and retryability.
-- Runtime compatibility resolution: the contract now accepts both the documented `status_code` response shape and the installed runner's `status` shape, with a fail-closed invalid-shape fallback. The 2026-09-01 no-write schema probe passed for both the production source and isolated probe, but hosted Studio's no-write deploy routing returned a zero-address not-found error before executing the isolated method; the exact hosted field remains recorded as unverified.
+- Affected verification: `tests/test_contract.py` covers status handling, bounded extraction, disagreement, missing fields, and retryability.
+- Runtime compatibility resolution: the contract accepts both the documented `status_code` response shape and the installed runner's `status` shape, with a fail-closed invalid-shape fallback. The deployed Studio `assess` receipt executed the hosted web path and recorded both test URLs as `MISSING`; the live evidence is bound to the source hash in `docs/VERIFICATION.md`.
 
 - Original choice: follow the current documentation's dependency prologue alone.
 - Verified issue/authority: the build experience record requires the runner version line before the dependency manifest for the live text runner, while current lint accepts both.
 - Replacement: retain `# v0.1.0` before the `Depends` line in the exact contract source.
 - Preserved outcomes: no product or trust-boundary change.
-- Affected verification: `genvm-lint check`, schema, typecheck, Direct Mode tests, and the pre-lock probe all pass.
-- Residual risk: the exact Studio runner/version must be recorded at PRE_DEPLOY; no deployment is authorized by this local result.
+- Affected verification: `genvm-lint check`, schema, typecheck, contract tests, and the deployed Studio receipt all pass.
+- Residual risk: the installed runner remains version-sensitive; the production fallback and live unresolved-path evidence are retained.
 
 - Original choice: use `retry_count` as a bounded attempt counter.
 - Verified issue/authority: the first implementation counted the initial assessment as a retry, causing the third retry boundary to be off by one.
@@ -38,8 +38,8 @@ Date-only ISO values are accepted. Local timestamps, HTTP `Date`/`Last-Modified`
 - Verified issue/authority: the engineering gate requires a user-facing supported-wallet allowlist, graceful unsupported-wallet handling, session revalidation, and transaction identity/finality feedback; provider announcements and metadata are untrusted discovery input.
 - Replacement: map only the selected provider object to MetaMask, OKX Wallet, or Rabby; keep discovery details out of visible copy; show inline chooser errors; revalidate account and chain before reads/writes; clean up account/chain/disconnect listeners; and retain the transaction hash with an Explorer link and copy action.
 - Preserved behavior: no wallet request occurs before an explicit chooser selection, and no unavailable Studio/live result is claimed locally.
-- Affected verification: `node --check frontend/app.js`, local no-wallet browser smoke with no console errors, and the exact-source PRE_DEPLOY package.
-- Residual risk: live wallet signing, Studio execution/finality, and authoritative readback remain blocked until anonymous PRE_DEPLOY approval.
+- Affected verification: `node --check frontend/app.js`, local no-wallet browser smoke with no console errors, and the exact-source PRE_DEPLOY/POST_DEPLOY_TEST packages.
+- Residual risk: live Vercel wallet signing and final integrated E2E remain pending the release checkpoint; Studio execution/finality and authoritative readback are approved for the deployed source.
 
 - Original choice: clear the transaction UI state in `finally` after waiting for a receipt.
 - Verified issue/authority: a browser reload or transient readback failure can lose the only transaction identity and invite a duplicate write; the current GenLayerJS transaction guidance exposes both receipt polling and transaction lookup for reconciliation.
@@ -64,11 +64,11 @@ Fetched notice bodies are inserted between explicit untrusted-data markers in th
 
 ## Evidence and release boundary
 
-Local Direct Mode is implementation evidence only. Before PRE_DEPLOY, the exact source hash, dependency/runtime version, schema, and anonymous-review package must be assembled. Studio deployment, live E2E, GitHub, Vercel, and final release evidence are not complete in this checkpoint.
+Local Direct Mode is implementation evidence only. The exact source hash, dependency/runtime version, schema, Studio deployment, live Studio E2E, and anonymous PRE_DEPLOY/POST_DEPLOY_TEST approvals are recorded in `docs/VERIFICATION.md`. GitHub, Vercel, and final release evidence remain later checkpoints.
 
 ## Experience entries applied
 
 - Evidence unavailability is separated from a substantive negative result: transport `0`, `429`, and `5xx` remain `UNRESOLVED` and retryable; exact `404/410` is represented separately as `MISSING` before the decision layer.
 - Production-shaped web/runtime values are used in mocks, and the probe verifies the actual response shape instead of relying on a permissive fake.
 - Storage and nondeterminism are isolated: primitive URL/ID values are captured before the nondeterministic block, and the probe exercises storage copy/readback.
-- Version-sensitive runner header ordering is preserved and explicitly held for Studio verification.
+- Version-sensitive runner header ordering is preserved and verified against the deployed Studio unresolved path.

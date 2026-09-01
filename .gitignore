@@ -8,3 +8,7 @@ artifacts/
 node_modules/
 dist/
 PRE_DEPLOY_REVIEW_PROMPT.txt
+STAGE-*.md
+probe_*.py
+runtime_status_probe.py
+test_probe.py

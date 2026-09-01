@@ -9,11 +9,11 @@ This document records the exact local build and live Studio evidence package. It
 - Frontend hardening baseline commit: `4c6fdadd52d824b9d1fc8a261f8387c13cb0a4cc`
 - Frontend transaction/recovery correction commit: `9836b2cd6c201507260e029ad35793b2f4919e06`
 - Runtime conflict probe commit: `ac9b535f8d541d5b4e4536700401e603d2f60444`
-- Current public-tree commit: recorded in the GitHub Presentation Pre-Push Report immediately before any push; this document intentionally identifies the exact source/frontend commits rather than self-referencing a future documentation commit.
+- Current public-tree commit: this evidence package commit, updated before GitHub pre-push review.
 - Contract: `SchoolClosureNoticeArbiter`
 - Network: Studionet.
 - Studio deployer/upgrader: `0x34b92E6553eaCA11A00A9d86d75d8a7881779D78`, directly selected in the signed-in GenLayer Studio session.
-- Current exact local-tree commit: recorded in the exact re-review package after the final commit; no GitHub push has occurred.
+- Current exact local-tree commit: recorded in the exact re-review package; no GitHub push has occurred.
 
 ## Contract inventory
 
@@ -28,7 +28,7 @@ This document records the exact local build and live Studio evidence package. It
 ```powershell
 $env:PYTHONIOENCODING='utf-8'
 py -3.13 -m pytest -q -p no:cacheprovider
-# 27 passed
+# 26 passed
 genvm-lint check .\contracts\school_closure_notice_arbiter.py
 # Lint passed; Validation passed
 genvm-lint schema .\contracts\school_closure_notice_arbiter.py
@@ -92,7 +92,7 @@ Invoke-RestMethod -Uri 'https://studio.genlayer.com/api' -Method Post -ContentTy
 
 Result: JSON-RPC success; schema contains exactly 6 methods (4 write, 2 view), with `create_case`, `freeze_case`, `assess`, `retry_unresolved`, `get_case`, and `get_case_state`. No contract address, transaction hash, signature, or chain write was produced.
 
-Targeted Studio runtime control: `probe_status_code_contract.py` (with an explicit empty constructor required by the Studio runner) was uploaded to the signed-in Studio Run Debug workspace on 2026-09-01. The direct no-write schema call then passed for the isolated probe (`check(url: string) -> int`). The first Run Debug control reported “You need at least one validator before you can deploy or interact with a contract”; after cooldown and switching to the recorded account, the Validators page showed 20 validators, but the next Run Debug schema refresh hit `Rate limit exceeded: 30 requests per minute`. The hosted no-write `gen_call` deploy control, tested with both the isolated probe and a minimal constructor/view contract, returned `Contract 0x0000000000000000000000000000000000000000 not found`; it did not execute the method. Studio logs identify GenVM `v0.2.16-x86_64-linux-release`. No simulation, deploy, signature, or write was sent. The disputed field therefore remains unverified in hosted Studio and blocks PRE_DEPLOY.
+Historical pre-deploy runtime control: `probe_status_code_contract.py` (with an explicit empty constructor required by the Studio runner) was uploaded to the signed-in Studio Run Debug workspace on 2026-09-01. The no-write schema call passed for the isolated probe, while the pre-deploy hosted no-write route returned a zero-address not-found response before method execution. Studio logs identified GenVM `v0.2.16-x86_64-linux-release`. This was superseded by the deployed `assess` receipt recorded below, which exercised the hosted web path.
 
 After two 55-second cooldowns, the same signed-in Studio session was switched to the recorded account `0x34b92E6553eaCA11A00A9d86d75d8a7881779D78`; the Validators page then showed `Validators 20` at 2026-09-01 09:12 +07:00. The isolated no-write `gen_call` deploy was retried with the installed `genlayer_py` encoder and the exact probe source:
 
@@ -138,9 +138,9 @@ Invoke-RestMethod -Uri 'https://studio.genlayer.com/api' -Method Post -ContentTy
 # {"jsonrpc":"2.0","error":{"code":-32001,"message":"Contract 0x0000000000000000000000000000000000000000 not found","data":{"contract_address":"0x0000000000000000000000000000000000000000"}},"id":131}
 ```
 
-These controls further isolate the blocker to hosted `gen_call` deploy routing/implementation. They do not produce a method receipt or runtime response object, so the `status_code` versus `status` field remains unverified. No simulation, deployment, signature, transaction, or chain write was sent.
+These pre-deploy controls isolated the then-available `gen_call` deploy routing behavior and did not produce a method receipt. They are retained as historical evidence; the deployed `assess` receipt below is the current runtime evidence for this source.
 
-Studio client route control on 2026-09-01: the current hosted bundle `https://studio.genlayer.com/assets/index-D-dlGG4S.js` calls `gen_getContractSchemaForCode` for undeployed source, uses `gen_call` for read/write calls whose `to` is an existing contract address, and implements `deployContract` through signed transaction encoding to the zero-address deploy target. The visible Run Debug control therefore has no separate hosted no-write deploy-method execution path: its `Deploy` action would be a deployment/signature, which is prohibited before PRE_DEPLOY. This explains why the available no-write API control is the documented `gen_call` deploy route and why the observed zero-address failure cannot be bypassed through the UI without violating the gate.
+Studio client route control on 2026-09-01: the hosted bundle `https://studio.genlayer.com/assets/index-D-dlGG4S.js` called `gen_getContractSchemaForCode` for undeployed source, used `gen_call` for reads/writes whose `to` was an existing contract address, and implemented `deployContract` through signed transaction encoding to the zero-address deploy target. Before PRE_DEPLOY, the visible Run Debug deploy action required the separately authorized deployment path. This historical route evidence is retained for provenance; the authorized deployment and live method execution are recorded below.
 
 ## Studio deployment and E2E evidence
 
@@ -160,7 +160,7 @@ One UI-control error is retained as negative evidence: `freeze_case` transaction
 - Studio contract address: `0x03E832036EDBCF96AEa03D64AB41Bc79d63b9A6f`.
 - Studio account selection: deployer/upgrader `0x34b92E6553eaCA11A00A9d86d75d8a7881779D78`.
 - Deployment transaction / Explorer: `0x736da42eebd02af3e7627b935c331fde4be233777ed2fd80676ba3018dfb0b79` / https://explorer-studio.genlayer.com/address/0x03E832036EDBCF96AEa03D64AB41Bc79d63b9A6f.
-- Deployment-source parity: exact uploaded source and deployed Studio editor remained bound to SHA-256 `BA62C92CACD85386D2356CAE88760FED167CC6075F563BEE099B3676DCE22B39`; no upgrade occurred.
+- Deployment-source parity: the independent RPC-returned deployed contract code hashes to SHA-256 `BA62C92CACD85386D2356CAE88760FED167CC6075F563BEE099B3676DCE22B39`; exact uploaded source matched and no upgrade occurred.
 - Live web URL: Not deployed by design.
 - Studio E2E matrix: executed; four intended writes finalized successfully, plus one recorded finalized rollback from the initial UI selector error.
 - GitHub URL: Not configured or pushed.
@@ -168,4 +168,4 @@ One UI-control error is retained as negative evidence: `freeze_case` transaction
 
 ## Known limitations and next gate
 
-The cached Direct Mode runner is `py-genlayer:1jb45aa8ynh2a9c9xn3b7qqh8sm5q93hwfp7jqmwsfhh8jpz09h6` and exposes `Response.status`; the current online web-access documentation uses `status_code` in its example. The production source accepts either response-field shape and fails closed when neither exists. The hosted assess receipt above is now the live Studio execution evidence for this exact deployed source; its equivalent output records both external responses as `MISSING`, and the intended unresolved retry path completed with authoritative readback. This evidence package is pending anonymous `POST_DEPLOY_TEST` review. GitHub, Vercel, and release actions remain out of scope.
+The cached Direct Mode runner is `py-genlayer:1jb45aa8ynh2a9c9xn3b7qqh8sm5q93hwfp7jqmwsfhh8jpz09h6` and exposes `Response.status`; the current online web-access documentation uses `status_code` in its example. The production source accepts either response-field shape and fails closed when neither exists. The hosted assess receipt above executed the live web path for this exact deployed source; its equivalent output records both external responses as `MISSING`, and the intended unresolved retry path completed with authoritative readback. Anonymous `POST_DEPLOY_TEST` is approved for this exact package. GitHub publication, Vercel deployment/E2E, and release completion remain pending the final checkpoint.
