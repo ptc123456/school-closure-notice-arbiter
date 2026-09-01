@@ -13,7 +13,7 @@ This document records the current local build checkpoint. It is not a PRE_DEPLOY
 - Contract: `SchoolClosureNoticeArbiter`
 - Network: Studionet is the intended release network; no contract is deployed yet.
 - Studio deployer/upgrader: `0x34b92E6553eaCA11A00A9d86d75d8a7881779D78`, directly selected in the signed-in GenLayer Studio session; no signature has been requested.
-- Current exact local-tree commit: `ac9b535f8d541d5b4e4536700401e603d2f60444`; no GitHub push has occurred.
+- Current exact local-tree commit: recorded in the exact re-review package after the final commit; no GitHub push has occurred.
 
 ## Contract inventory
 
@@ -45,15 +45,16 @@ powershell -ExecutionPolicy Bypass -File E:\Genlayer\scripts\audit-genlayer-proj
 
 ## Frontend regression evidence
 
-The dependency-free Node suite was run on 2026-08-31 with Node `v22.22.2`:
+The dependency-free Node suite was run on 2026-09-01 with Node `v22.22.2`:
 
-- pre-await single-flight lock: passed;
-- pending hash persistence after readback failure and restart reconciliation: passed;
-- explicit `FINALIZED`, accepted consensus, and `FINISHED_WITH_RETURN` proof: passed;
-- selected-provider account approval/chain-switch ordering and rejected connection: passed;
+- synchronous pre-await single-flight lock: passed;
+- canonical hash persistence after readback failure and restart reconciliation: passed;
+- exact `FINALIZED`, `MAJORITY_AGREE`, and `FINISHED_WITH_RETURN` proof, including invalid aliases: passed;
+- selected-provider account approval/chain-switch ordering, rejected connection, and invalid-account rejection: passed;
+- storage preflight, insufficient-balance no-write path, post-hash storage failure volatile lock, and account/provider-bound recovery: passed;
 - listener cleanup and focus wrapping: passed.
 
-The local browser smoke was run against `http://127.0.0.1:8765/frontend/index.html?v=20260831-recovery2` on 2026-08-31. It verified disconnected reload state, explicit wallet chooser, unsupported-wallet handling, no visible `EIP-6963` protocol label, and zero browser console errors. No wallet signature or Studio transaction was sent.
+The local browser smoke was run against `http://127.0.0.1:8765/frontend/index.html?v=20260901-recovery3` on 2026-09-01. It verified disconnected reload state, disabled consequential writes before wallet/balance readiness, explicit wallet chooser, focus-visible outline on the focused close control, focus return to Connect wallet, no visible `EIP-6963` protocol label, and zero browser console errors. No wallet signature or Studio transaction was sent.
 
 ## Runtime conflict evidence
 
@@ -75,7 +76,21 @@ py -3.13 -m pytest -q .\runtime_status_probe.py -p no:cacheprovider
 # probe_status_code_contract.py:11: return gl.nondet.web.get(url).status_code
 ```
 
-The production-shaped replacement probe uses `response.status` in `test_probe.py` and passes as part of the 26-test contract suite. The exact Studio runtime remains a required post-approval verification because the online documentation and cached runner are version-sensitive and must not be silently conflated.
+The production-shaped replacement probe uses `response.status` in `test_probe.py` and passes as part of the 26-test contract suite.
+
+No-write Studionet schema probe, run 2026-09-01 (RPC `https://studio.genlayer.com/api`):
+
+```powershell
+$source = Get-Content .\contracts\school_closure_notice_arbiter.py -Raw -Encoding utf8
+$bytes = [Text.Encoding]::UTF8.GetBytes($source)
+$hex = '0x' + (($bytes | ForEach-Object { $_.ToString('x2') }) -join '')
+$body = @{ jsonrpc = '2.0'; id = 1; method = 'gen_getContractSchemaForCode'; params = @($hex) } | ConvertTo-Json -Depth 5
+Invoke-RestMethod -Uri 'https://studio.genlayer.com/api' -Method Post -ContentType application/json -Body $body
+```
+
+Result: JSON-RPC success; schema contains exactly 6 methods (4 write, 2 view), with `create_case`, `freeze_case`, `assess`, `retry_unresolved`, `get_case`, and `get_case_state`. No contract address, transaction hash, signature, or chain write was produced.
+
+Targeted Studio runtime control: `probe_status_code_contract.py` was uploaded to the signed-in Studio Run Debug workspace on 2026-09-01 and selected for simulation. The first control read showed `Validators 0` and “You need at least one validator before you can deploy or interact with a contract”; after the validator list loaded to 20, the next Run Debug refresh returned the official Studio error `Rate limit exceeded: 30 requests per minute`. No simulation/write was sent. This exact runtime control remains blocked by the Studio session rate limit and is not claimed as a pass.
 
 ## Live evidence status
 
@@ -90,4 +105,4 @@ The production-shaped replacement probe uses `response.status` in `test_probe.py
 
 ## Known limitations and next gate
 
-The cached Direct Mode runner is `py-genlayer:1jb45aa8ynh2a9c9xn3b7qqh8sm5q93hwfp7jqmwsfhh8jpz09h6` and exposes `Response.status`. The current online web-access documentation uses `status_code` in its example. This is recorded as a version-sensitive boundary; the exact Studio runtime must be probed before PRE_DEPLOY. No live evidence is inferred from the local green tests.
+The cached Direct Mode runner is `py-genlayer:1jb45aa8ynh2a9c9xn3b7qqh8sm5q93hwfp7jqmwsfhh8jpz09h6` and exposes `Response.status`. The current online web-access documentation uses `status_code` in its example. Production therefore stays on the verified runner-compatible `status` field, while the dated Studio control and its rate-limit blocker are explicitly recorded. No live contract evidence is inferred from local green tests or the schema-only RPC call.

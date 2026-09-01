@@ -16,6 +16,7 @@ h2 { font-size: 20px; margin: 0; letter-spacing: -.02em; }
 label { display: block; color: #9ba89f; font-size: 12px; font-weight: 700; letter-spacing: .04em; margin-bottom: 15px; }
 input { display: block; width: 100%; background: #101414; border: 1px solid #35423b; color: #eff5eb; border-radius: 9px; padding: 13px 14px; margin-top: 7px; font: 14px ui-monospace, monospace; outline: none; }
 input:focus { border-color: #b6e26f; box-shadow: 0 0 0 3px #b6e26f22; }
+button:focus-visible, a:focus-visible, input:focus-visible { outline: 3px solid #b6e26f; outline-offset: 3px; }
 .two-up { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
 .button { border: 1px solid #536258; color: #ecf2e9; background: #222a26; border-radius: 8px; padding: 11px 15px; font-weight: 800; cursor: pointer; }
 .button:hover:not(:disabled) { border-color: #b6e26f; transform: translateY(-1px); }

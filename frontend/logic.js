@@ -1,35 +1,62 @@
 export const PENDING_STORAGE_KEY = "school-closure-notice-arbiter.pending-transaction";
 export const FINAL_STATUS = "FINALIZED";
-export const SUCCESSFUL_CONSENSUS = new Set(["AGREE", "MAJORITY_AGREE", "SUCCESS", "ACCEPTED"]);
+export const SUCCESSFUL_CONSENSUS = "MAJORITY_AGREE";
 export const SUCCESSFUL_EXECUTION = "FINISHED_WITH_RETURN";
+export const MIN_SPENDABLE_WEI = 10_000_000_000_000_000n;
+
+const METHODS = new Set(["create_case", "freeze_case", "assess", "retry_unresolved"]);
+const ADDRESS = /^0x[0-9a-fA-F]{40}$/;
+const HASH = /^0x[0-9a-fA-F]{64}$/;
+
+export function isEvmAddress(value) { return typeof value === "string" && ADDRESS.test(value); }
+export function isTransactionHash(value) { return typeof value === "string" && HASH.test(value); }
+
+function validPending(pending) {
+  return Boolean(
+    pending && typeof pending === "object" &&
+    isTransactionHash(pending.hash) && isEvmAddress(pending.contractAddress) &&
+    isEvmAddress(pending.account) && typeof pending.walletKey === "string" && pending.walletKey &&
+    typeof pending.caseId === "string" && pending.caseId && METHODS.has(pending.functionName) &&
+    Array.isArray(pending.args),
+  );
+}
 
 export function readPending(storage) {
   try {
     const raw = storage?.getItem(PENDING_STORAGE_KEY);
     if (!raw) return null;
     const pending = JSON.parse(raw);
-    if (!pending || typeof pending !== "object" || typeof pending.hash !== "string" || !pending.hash) return null;
-    if (typeof pending.contractAddress !== "string" || typeof pending.caseId !== "string" || typeof pending.functionName !== "string") return null;
-    return pending;
+    return validPending(pending) ? pending : null;
   } catch {
     return null;
   }
 }
 
-export function writePending(storage, pending) {
-  storage.setItem(PENDING_STORAGE_KEY, JSON.stringify(pending));
+export function preflightStorage(storage) {
+  const key = `${PENDING_STORAGE_KEY}.preflight`;
+  try {
+    storage.setItem(key, "ok");
+    if (storage.getItem(key) !== "ok") throw new Error("storage readback failed");
+    storage.removeItem(key);
+  } catch {
+    throw new Error("Local transaction recovery storage is unavailable; no transaction was submitted.");
+  }
 }
 
-export function clearPending(storage) {
-  storage.removeItem(PENDING_STORAGE_KEY);
+export function writePending(storage, pending) {
+  if (!validPending(pending)) throw new Error("Refusing to persist an incomplete transaction record.");
+  storage.setItem(PENDING_STORAGE_KEY, JSON.stringify(pending));
+  if (readPending(storage)?.hash !== pending.hash) throw new Error("Pending transaction persistence readback failed.");
 }
+
+export function clearPending(storage) { storage.removeItem(PENDING_STORAGE_KEY); }
 
 export function transactionProof(receipt, transaction) {
   const status = String(transaction?.statusName ?? transaction?.status_name ?? receipt?.statusName ?? receipt?.status_name ?? "").toUpperCase();
   const consensus = String(transaction?.resultName ?? transaction?.result_name ?? transaction?.consensusResult ?? transaction?.consensus_result ?? "").toUpperCase();
   const execution = String(transaction?.txExecutionResultName ?? transaction?.tx_execution_result_name ?? receipt?.txExecutionResultName ?? receipt?.tx_execution_result_name ?? "").toUpperCase();
   if (status !== FINAL_STATUS) throw new Error("Transaction is not finalized by the GenLayer network.");
-  if (!SUCCESSFUL_CONSENSUS.has(consensus)) throw new Error("Transaction did not reach an accepted consensus result.");
+  if (consensus !== SUCCESSFUL_CONSENSUS) throw new Error("Transaction did not reach MAJORITY_AGREE consensus.");
   if (execution !== SUCCESSFUL_EXECUTION) throw new Error("The finalized transaction did not complete successfully.");
   return { status, consensus, execution };
 }
@@ -54,17 +81,32 @@ export function assertReadback(result, pending) {
   return result;
 }
 
-export async function runTransaction({ state, storage, client, pending, validateWalletSession, readback, onPending }) {
+function assertSessionBinding(pending, account, walletKey) {
+  if (!isEvmAddress(account) || account.toLowerCase() !== pending.account.toLowerCase() || walletKey !== pending.walletKey) {
+    throw new Error("Pending transaction belongs to a different wallet session; reconnect the recorded account and provider.");
+  }
+}
+
+export async function runTransaction({ state, storage, client, pending, validateWalletSession, preflight, readback, onPending }) {
   if (state.busy || state.pending) return { started: false };
   state.busy = true;
   try {
+    preflightStorage(storage);
+    await preflight?.();
     await validateWalletSession();
     const hash = await client.writeContract({ address: pending.contractAddress, functionName: pending.functionName, args: pending.args, value: BigInt(0) });
+    if (!isTransactionHash(hash)) throw new Error("The wallet returned an invalid transaction hash.");
     const saved = { ...pending, hash, createdAt: new Date().toISOString() };
-    writePending(storage, saved);
+    try {
+      writePending(storage, saved);
+    } catch {
+      state.pending = { ...saved, volatile: true };
+      onPending?.(state.pending);
+      throw new Error(`Transaction ${hash} was submitted, but recovery storage failed. Keep this tab open; the transaction remains locked.`);
+    }
     state.pending = saved;
     onPending?.(saved);
-    const receipt = await client.waitForTransactionReceipt({ hash, status: "FINALIZED", interval: 5000, retries: 10, fullTransaction: true });
+    const receipt = await client.waitForTransactionReceipt({ hash, status: FINAL_STATUS, interval: 5000, retries: 10, fullTransaction: true });
     const transaction = await client.getTransaction({ hash });
     transactionProof(receipt, transaction);
     const result = await readback(saved);
@@ -72,15 +114,13 @@ export async function runTransaction({ state, storage, client, pending, validate
     clearPending(storage);
     state.pending = null;
     return { started: true, hash, result };
-  } catch (error) {
-    throw error;
   } finally {
     if (!state.pending) state.busy = false;
   }
 }
 
-export async function reconcilePending({ state, storage, client, validateWalletSession, readback }) {
-  const pending = readPending(storage);
+export async function reconcilePending({ state, storage, client, account, walletKey, validateWalletSession, readback }) {
+  const pending = state.pending || readPending(storage);
   if (!pending) {
     state.pending = null;
     state.busy = false;
@@ -89,8 +129,9 @@ export async function reconcilePending({ state, storage, client, validateWalletS
   state.pending = pending;
   state.busy = true;
   try {
+    assertSessionBinding(pending, account, walletKey);
     await validateWalletSession();
-    const receipt = await client.waitForTransactionReceipt({ hash: pending.hash, status: "FINALIZED", interval: 5000, retries: 10, fullTransaction: true });
+    const receipt = await client.waitForTransactionReceipt({ hash: pending.hash, status: FINAL_STATUS, interval: 5000, retries: 10, fullTransaction: true });
     const transaction = await client.getTransaction({ hash: pending.hash });
     transactionProof(receipt, transaction);
     const result = await readback(pending);
@@ -105,7 +146,7 @@ export async function reconcilePending({ state, storage, client, validateWalletS
 
 export async function connectWallet(provider, switchNetwork) {
   const accounts = await provider.request({ method: "eth_requestAccounts" });
-  if (!accounts?.[0]) throw new Error("The wallet returned no account.");
+  if (!isEvmAddress(accounts?.[0])) throw new Error("The wallet returned no valid EVM account.");
   await switchNetwork(provider);
   return accounts[0];
 }
@@ -122,5 +163,3 @@ export function focusTrap(elements, active, backwards = false) {
   if (index < 0) return elements[0];
   return elements[(index + (backwards ? -1 : 1) + elements.length) % elements.length];
 }
-
-

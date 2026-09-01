@@ -1,6 +1,6 @@
 import { createClient } from "https://esm.sh/genlayer-js@1.1.8?bundle";
 import { studionet } from "https://esm.sh/genlayer-js@1.1.8/chains?bundle";
-import { attachSessionListeners, connectWallet, focusTrap, readPending, reconcilePending, runTransaction } from "./logic.js";
+import { MIN_SPENDABLE_WEI, attachSessionListeners, connectWallet, focusTrap, readPending, reconcilePending, runTransaction } from "./logic.js";
 
 const $ = (id) => document.getElementById(id);
 const WALLET_SPECS = [
@@ -9,7 +9,7 @@ const WALLET_SPECS = [
   { label: "Rabby", rdns: ["io.rabby"], flags: ["isRabby"] },
 ];
 const LEGACY_UUID = "legacy-supported-wallet";
-const state = { providers: new Map(), providerUuids: new WeakMap(), provider: null, address: null, client: null, busy: false, pending: readPending(window.localStorage), listeners: [] };
+const state = { providers: new Map(), providerUuids: new WeakMap(), provider: null, walletKey: null, address: null, client: null, balance: null, balanceReady: false, busy: false, pending: readPending(window.localStorage), listeners: [] };
 
 function isProvider(value) { return Boolean(value && typeof value === "object" && typeof value.request === "function"); }
 
@@ -62,7 +62,9 @@ function requireConnected() {
 
 function setButtons() {
   const connected = Boolean(state.client && state.address);
-  for (const id of ["create", "freeze", "assess", "retry", "read"]) $(id).disabled = !connected || state.busy || Boolean(state.pending);
+  const writesBlocked = !connected || state.busy || Boolean(state.pending) || !state.balanceReady;
+  for (const id of ["create", "freeze", "assess", "retry"]) $(id).disabled = writesBlocked;
+  $("read").disabled = !connected || state.busy || Boolean(state.pending);
   $("resume").disabled = !connected || !state.pending;
 }
 
@@ -112,8 +114,11 @@ async function connect(detail) {
     const account = await connectWallet(detail.provider, switchToStudionet);
     disconnect("Switching wallet session…");
     state.provider = detail.provider;
+    state.walletKey = String(detail.info.rdns || detail.info.uuid || detail.info.name || "").trim().toLowerCase();
     state.address = account;
     state.client = createClient({ chain: studionet, account: state.address, provider: state.provider });
+    state.balance = null;
+    state.balanceReady = false;
     $("wallet-status").textContent = detail.info.name + ": " + state.address.slice(0, 6) + "…" + state.address.slice(-4);
     setActivity("Connected to " + detail.info.name + " on Studionet.");
     const onAccountsChanged = () => disconnect("Account changed. Connect again.");
@@ -123,6 +128,7 @@ async function connect(detail) {
     state.listeners = [[cleanup]];
     $("chooser").close();
     setButtons();
+    await refreshBalance();
     if (state.pending) await reconcileSavedTransaction();
   } catch (error) { setWalletError(error.message || "The wallet could not connect."); }
 }
@@ -130,8 +136,30 @@ async function connect(detail) {
 function disconnect(message = "Disconnected after reload") {
   for (const [cleanup] of state.listeners) cleanup();
   state.listeners = [];
-  state.provider = null; state.address = null; state.client = null;
+  state.provider = null; state.walletKey = null; state.address = null; state.client = null; state.balance = null; state.balanceReady = false;
   $("wallet-status").textContent = message; setActivity(message); setButtons();
+}
+
+async function refreshBalance() {
+  state.balanceReady = false;
+  setButtons();
+  if (!state.client || !state.address) return false;
+  try {
+    state.balance = BigInt(await state.client.getBalance({ address: state.address }));
+    if (state.balance < MIN_SPENDABLE_WEI) {
+      setActivity("Insufficient spendable GEN for a safe transaction preflight.", true);
+      return false;
+    }
+    state.balanceReady = true;
+    return true;
+  } catch {
+    setActivity("Could not verify spendable GEN balance; writes remain disabled.", true);
+    return false;
+  } finally { setButtons(); }
+}
+
+async function ensureSpendableBalance() {
+  if (!(await refreshBalance())) throw new Error("Insufficient or unverifiable spendable GEN balance; no transaction was submitted.");
 }
 
 async function validateWalletSession() {
@@ -177,7 +205,8 @@ function showTransaction(hash) {
 function showPending(pending) {
   showTransaction(pending.hash);
   $("resume").hidden = false;
-  setActivity("Transaction " + pending.hash.slice(0, 10) + "… is pending reconciliation. Do not submit another transaction.", true);
+  const suffix = pending.volatile ? " Recovery storage failed; keep this tab open." : "";
+  setActivity("Transaction " + pending.hash.slice(0, 10) + "… is pending reconciliation. Do not submit another transaction." + suffix, true);
   setButtons();
 }
 
@@ -185,7 +214,7 @@ async function reconcileSavedTransaction() {
   if (!state.pending) return;
   showPending(state.pending);
   try {
-    const recovered = await reconcilePending({ state, storage: window.localStorage, client: state.client, validateWalletSession, readback: (pending) => readCase(pending.contractAddress, pending.caseId, false) });
+    const recovered = await reconcilePending({ state, storage: window.localStorage, client: state.client, account: state.address, walletKey: state.walletKey, validateWalletSession, readback: (pending) => readCase(pending.contractAddress, pending.caseId, false) });
     showTransaction(recovered.hash);
     setActivity("Recovered transaction finalized and verified from the contract.");
     setButtons();
@@ -198,10 +227,10 @@ async function reconcileSavedTransaction() {
 async function transact(functionName, args) {
   if (state.busy || state.pending) return;
   const address = requireConnected();
-  const pending = { contractAddress: address, caseId: $("case-id").value.trim(), schoolId: $("school-id").value.trim(), functionName, args };
+  const pending = { contractAddress: address, account: state.address, walletKey: state.walletKey, caseId: $("case-id").value.trim(), schoolId: $("school-id").value.trim(), functionName, args };
   setActivity("Confirm the transaction in your wallet…");
   try {
-    const completed = await runTransaction({ state, storage: window.localStorage, client: state.client, pending, validateWalletSession, onPending: showPending, readback: (saved) => readCase(saved.contractAddress, saved.caseId, false) });
+    const completed = await runTransaction({ state, storage: window.localStorage, client: state.client, pending, validateWalletSession, preflight: ensureSpendableBalance, onPending: showPending, readback: (saved) => readCase(saved.contractAddress, saved.caseId, false) });
     showTransaction(completed.hash);
     setActivity("Transaction confirmed. Checking the saved case…");
     setActivity("Case updated and verified from the contract.");

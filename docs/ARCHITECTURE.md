@@ -19,7 +19,7 @@ Date-only ISO values are accepted. Local timestamps, HTTP `Date`/`Last-Modified`
 - Replacement: use `response.status` and map `404/410` to `MISSING`, `0/429/5xx` to retryable `UNAVAILABLE`, and other non-2xx responses to `MALFORMED`.
 - Preserved outcomes: source identity, date comparison, declared revision semantics, retry behavior, and no HTTP timestamp authority are unchanged.
 - Affected verification: `test_probe.py` and `tests/test_contract.py` cover status handling, bounded extraction, disagreement, missing fields, and retryability.
-- Residual risk: the current online documentation and the cached runner differ on this field name; a fresh Studio schema/runtime probe is required before PRE_DEPLOY.
+- Residual risk: the current online documentation and the cached runner differ on this field name. The 2026-09-01 no-write schema probe passed, while the targeted Studio Run Debug runtime control was blocked by the session's `Rate limit exceeded: 30 requests per minute`; that control is recorded and not claimed as a pass.
 
 - Original choice: follow the current documentation's dependency prologue alone.
 - Verified issue/authority: the build experience record requires the runner version line before the dependency manifest for the live text runner, while current lint accepts both.
@@ -47,6 +47,16 @@ Date-only ISO values are accepted. Local timestamps, HTTP `Date`/`Last-Modified`
 - Preserved behavior: selected-provider session validation still runs before each read/write, and a failed or incomplete reconciliation never silently submits a replacement.
 - Affected verification: `frontend/regression.test.mjs` covers pre-await single-flight, persistence/restart reconciliation, consensus/finality/execution proof, provider rejection/order, listener cleanup, and focus wrapping.
 - Residual risk: if the wallet or RPC remains unavailable, the pending record intentionally remains until the same hash can be reconciled.
+
+- Original choice: treat a successful wallet response as sufficient to enable writes.
+- Verified issue/authority: a wallet can be connected while its account is invalid, unfunded, or different from a persisted pending transaction.
+- Replacement: require a valid EVM account, bind each pending record to account/provider/method/contract/case, preflight local storage, require at least `0.01 GEN` spendable balance before enabling or submitting writes, and keep a volatile lock with the submitted hash if post-hash persistence fails.
+- Preserved behavior: reads remain authoritative contract reads; no replacement write is enabled while a pending identity is unresolved.
+- Affected verification: frontend regression suite covers invalid accounts, insufficient balance, storage failure after submission, account/provider mismatch, and restart reconciliation.
+
+- Original choice: rely on browser-default focus indication for controls.
+- Replacement: provide `:focus-visible` styling for buttons, links, and inputs, while retaining the modal focus trap and close-button return focus.
+- Affected verification: CSS source check plus browser smoke focus inspection.
 
 ## Trust boundary
 
