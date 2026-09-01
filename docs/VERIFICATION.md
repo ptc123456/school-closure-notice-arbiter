@@ -140,6 +140,8 @@ Invoke-RestMethod -Uri 'https://studio.genlayer.com/api' -Method Post -ContentTy
 
 These controls further isolate the blocker to hosted `gen_call` deploy routing/implementation. They do not produce a method receipt or runtime response object, so the `status_code` versus `status` field remains unverified. No simulation, deployment, signature, transaction, or chain write was sent.
 
+Studio client route control on 2026-09-01: the current hosted bundle `https://studio.genlayer.com/assets/index-D-dlGG4S.js` calls `gen_getContractSchemaForCode` for undeployed source, uses `gen_call` for read/write calls whose `to` is an existing contract address, and implements `deployContract` through signed transaction encoding to the zero-address deploy target. The visible Run Debug control therefore has no separate hosted no-write deploy-method execution path: its `Deploy` action would be a deployment/signature, which is prohibited before PRE_DEPLOY. This explains why the available no-write API control is the documented `gen_call` deploy route and why the observed zero-address failure cannot be bypassed through the UI without violating the gate.
+
 ## Live evidence status
 
 - Studio contract address: Not deployed; PRE_DEPLOY is required first.
