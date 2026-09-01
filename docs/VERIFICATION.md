@@ -111,7 +111,7 @@ Invoke-RestMethod -Uri 'https://studio.genlayer.com/api' -Method Post -ContentTy
 # {"jsonrpc":"2.0","error":{"code":-32001,"message":"Contract 0x0000000000000000000000000000000000000000 not found","data":{"contract_address":"0x0000000000000000000000000000000000000000}},"id":31}
 ```
 
-The payload is accepted far enough to return the hosted resource-not-found response, but the deploy probe method is not executed. This remains a hosted Studio control failure, not a runtime verdict for `status_code` versus `status`.
+The payload is accepted far enough to return the hosted resource-not-found response, but the deploy probe method is not executed. Retrying the same no-write deploy payload with `leader_only=True` (request id `33`) returned the same `-32001` zero-address not-found response. This remains a hosted Studio control failure, not a runtime verdict for `status_code` versus `status`.
 
 ## Live evidence status
 
