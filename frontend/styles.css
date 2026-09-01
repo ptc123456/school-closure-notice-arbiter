@@ -1032,13 +1032,6 @@ dialog#chooser::backdrop {
   flex-shrink: 0;
 }
 
-.dialog-footer-note {
-  margin: var(--space-3xs) 0 0;
-  font-size: 11px;
-  color: var(--color-muted);
-  text-align: center;
-}
-
 /* Progressive Breakpoints (min-width enhancements) */
 
 /* Tablet and wider: 641px+ */
