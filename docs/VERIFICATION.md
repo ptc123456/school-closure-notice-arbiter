@@ -62,6 +62,7 @@ The local browser smoke was run against `http://127.0.0.1:8765/frontend/index.ht
 Official documentation was retrieved on 2026-08-31 at approximately 22:03 +07:00:
 
 - [GenLayer Web Access](https://docs.genlayer.com/developers/intelligent-contracts/features/web-access) shows `Response.status_code` in its HTTP examples and says external responses must be reduced to stable consensus-safe fields.
+- [GenLayer Node `gen_call`](https://docs.genlayer.com/api-references/genlayer-node/gen/gen_call) documents no-transaction deploy calls with `type: "deploy"`, a required zero-address `to`, and no contract-state validation for deploy requests.
 - [GenLayerJS transaction methods](https://docs.genlayer.com/api-references/genlayer-js/transactions) documents `waitForTransactionReceipt` at `FINALIZED` and `getTransaction` as the source for status, execution result, and consensus details.
 - [GenLayer networks](https://docs.genlayer.com/developers/networks) records Studionet RPC `https://studio.genlayer.com/api`, chain ID `61999`, and Explorer `explorer-studio.genlayer.com`.
 
@@ -120,6 +121,8 @@ Cooldown recheck on 2026-09-01 at 09:44 +07:00: the signed-in Studio Validators 
 ```
 
 This confirms the hosted route still rejects the zero-address no-write deploy before executing the probe method, even after the validator count recovers. No transaction hash or contract address was produced.
+
+Route-shape control on 2026-09-01 at 09:45 +07:00: the same no-write deploy payload with `to` omitted (request id `61`) returned `{"jsonrpc":"2.0","error":{"code":-32603,"message":"'to'"},"id":61`, confirming that the hosted endpoint requires the documented `to` field and still does not expose an alternate deploy route. The official Node API documentation says deploy `gen_call` must use the zero address and that deploy bypasses contract-state validation; the observed `-32001` therefore remains a hosted implementation/routing failure before GenVM execution.
 
 ## Live evidence status
 
