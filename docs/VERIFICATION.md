@@ -113,6 +113,14 @@ Invoke-RestMethod -Uri 'https://studio.genlayer.com/api' -Method Post -ContentTy
 
 The payload is accepted far enough to return the hosted resource-not-found response, but the deploy probe method is not executed. Retrying the same no-write deploy payload with `leader_only=True` (request id `33`) returned the same `-32001` zero-address not-found response. This remains a hosted Studio control failure, not a runtime verdict for `status_code` versus `status`. The source-side compatibility correction removes the need to choose one field at build time, but it does not substitute for the required hosted execution evidence.
 
+Cooldown recheck on 2026-09-01 at 09:44 +07:00: the signed-in Studio Validators page again showed `Validators 20` for the recorded account. Opening Run Debug and selecting the isolated probe still rendered `You need at least one validator before you can deploy or interact with a contract`, so no method form or execution control was available. A single additional official-shaped no-write `gen_call` deploy request with the optional `status` omitted (request id `51`) returned the exact same response:
+
+```json
+{"jsonrpc":"2.0","error":{"code":-32001,"message":"Contract 0x0000000000000000000000000000000000000000 not found","data":{"contract_address":"0x0000000000000000000000000000000000000000"}},"id":51}
+```
+
+This confirms the hosted route still rejects the zero-address no-write deploy before executing the probe method, even after the validator count recovers. No transaction hash or contract address was produced.
+
 ## Live evidence status
 
 - Studio contract address: Not deployed; PRE_DEPLOY is required first.
