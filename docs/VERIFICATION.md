@@ -38,7 +38,7 @@ genvm-lint typecheck .\contracts\school_closure_notice_arbiter.py
 node --check .\frontend\app.js
 # exit code 0
 node --test .\frontend\regression.test.mjs
-# 5 tests passed
+# 9 tests passed
 powershell -ExecutionPolicy Bypass -File E:\Genlayer\scripts\audit-genlayer-project-gates.ps1 -ProjectName school-closure-notice-arbiter
 # PASS shared-governance structured invariants; PASS project
 ```
@@ -52,9 +52,10 @@ The dependency-free Node suite was run on 2026-09-01 with Node `v22.22.2`:
 - exact `FINALIZED`, `MAJORITY_AGREE`, and `FINISHED_WITH_RETURN` proof, including invalid aliases: passed;
 - selected-provider account approval/chain-switch ordering, rejected connection, and invalid-account rejection: passed;
 - storage preflight, insufficient-balance no-write path, post-hash storage failure volatile lock, and account/provider-bound recovery: passed;
+- malformed pending metadata is retained and blocks writes, including the invalid startup-state reconnect path: passed;
 - listener cleanup and focus wrapping: passed.
 
-The local browser smoke was run against `http://127.0.0.1:8765/frontend/index.html?v=20260901-recovery3` on 2026-09-01. It verified disconnected reload state, disabled consequential writes before wallet/balance readiness, explicit wallet chooser, focus-visible outline on the focused close control, focus return to Connect wallet, no visible `EIP-6963` protocol label, and zero browser console errors. No wallet signature or Studio transaction was sent.
+The local browser smoke was run against `http://127.0.0.1:8765/frontend/index.html?v=20260901-recovery4` on 2026-09-01. It verified disconnected reload state, disabled consequential writes before wallet/balance readiness, explicit wallet chooser, focus-visible outline on the focused close control, focus return to Connect wallet, no visible `EIP-6963` protocol label, and zero browser console errors. No wallet signature or Studio transaction was sent.
 
 ## Runtime conflict evidence
 
@@ -73,7 +74,7 @@ $env:PYTHONIOENCODING='utf-8'
 py -3.13 -m pytest -q .\runtime_status_probe.py -p no:cacheprovider
 # exit code 1
 # AttributeError: 'Response' object has no attribute 'status_code'
-# probe_status_code_contract.py:11: return gl.nondet.web.get(url).status_code
+# probe_status_code_contract.py:14: return gl.nondet.web.get(url).status_code
 ```
 
 The production-shaped replacement probe uses `response.status` in `test_probe.py` and passes as part of the 26-test contract suite.

@@ -130,6 +130,15 @@ test("malformed pending storage is invalid, retained, and fail-closed", async ()
   assert.deepEqual(blocked, { started: false });
 });
 
+test("invalid startup state remains fail-closed during reconnect", async () => {
+  const state = { busy: false, pending: { invalid: true, status: "INVALID" } };
+  const store = storage();
+  await assert.rejects(reconcilePending({ state, storage: store, client: {}, account: "0x3333333333333333333333333333333333333333", walletKey: "io.metamask", validateWalletSession: async () => {}, readback: async () => ({ state: "DRAFT" }) }), /invalid; writes are locked/);
+  assert.equal(state.busy, true);
+  const blocked = await runTransaction({ state, storage: store, client: { writeContract: async () => { throw new Error("must not write"); } }, pending: {}, validateWalletSession: async () => {}, readback: async () => ({ state: "DRAFT" }) });
+  assert.deepEqual(blocked, { started: false });
+});
+
 test("session listeners clean up and focus trap wraps both directions", () => {
   const attached = [];
   const removed = [];

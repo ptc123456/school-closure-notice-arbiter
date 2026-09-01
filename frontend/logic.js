@@ -125,9 +125,10 @@ export async function runTransaction({ state, storage, client, pending, validate
 }
 
 export async function reconcilePending({ state, storage, client, account, walletKey, validateWalletSession, readback }) {
-  const pending = state.pending || readPending(storage);
+  const inspected = inspectPending(storage);
+  const pending = state.pending?.invalid ? null : state.pending || (inspected.status === "VALID" ? inspected.pending : null);
   if (!pending) {
-    if (inspectPending(storage).status === "INVALID") {
+    if (state.pending?.invalid || inspected.status === "INVALID") {
       state.pending = { invalid: true, status: "INVALID" };
       state.busy = true;
       throw new Error("Pending transaction recovery metadata is invalid; writes are locked until it is safely remediated.");
