@@ -126,6 +126,20 @@ Route-shape control on 2026-09-01 at 09:45 +07:00: the same no-write deploy payl
 
 Session control on 2026-09-01: the current Studio client bundle uses a WebSocket at `wss://studio.genlayer.com/ws` and sends `x-session-id: ws-<timestamp>` on RPC requests. A no-write control first confirmed `sim_getAllValidators` returned 20 with that session format. A real WebSocket session was then opened and the isolated deploy payload was sent through `gen_call` with that session header (request id `101`); it still returned the same zero-address `-32001` before execution. A session-correct `sim_call` control using the same deploy payload (request id `111`) also returned the same zero-address `-32001`. Thus the route failure is reproducible with the hosted session protocol, not merely an unauthenticated PowerShell request.
 
+Payload-validation control on 2026-09-01: the same session-correct no-write request was sent with the documented `status: "accepted"`, `gas: "0x5208"`, and `value: "0x0"` fields (request id `121`). Studio returned `{"code":-32602,"message":"Invalid status: must be 'decided' or 'finalized'"}`. This is a second current hosted/documentation mismatch: the official `gen_call` page retrieved on 2026-09-01 documents `accepted`/`finalized`, while the hosted endpoint accepts `decided`/`finalized`. The request was not executed. A sparse retry using the hosted-required `status: "decided"` (request id `131`) returned the same zero-address `-32001 Contract ... not found` before execution. Exact control command shape:
+
+```powershell
+$request = @{ jsonrpc = '2.0'; id = 121; method = 'gen_call'; params = @(@{ type = 'deploy'; data = $data.Trim(); from = '0x34b92E6553eaCA11A00A9d86d75d8a7881779D78'; to = '0x0000000000000000000000000000000000000000'; status = 'accepted'; gas = '0x5208'; value = '0x0' }) } | ConvertTo-Json -Depth 8 -Compress
+Invoke-RestMethod -Uri 'https://studio.genlayer.com/api' -Method Post -ContentType 'application/json' -Headers @{ 'x-session-id' = $sessionId } -Body $request
+# {"jsonrpc":"2.0","error":{"code":-32602,"message":"Invalid status: must be 'decided' or 'finalized'","data":{}},"id":121}
+
+$request = @{ jsonrpc = '2.0'; id = 131; method = 'gen_call'; params = @(@{ type = 'deploy'; data = $data.Trim(); from = '0x34b92E6553eaCA11A00A9d86d75d8a7881779D78'; to = '0x0000000000000000000000000000000000000000'; status = 'decided'; gas = '0x5208'; value = '0x0' }) } | ConvertTo-Json -Depth 8 -Compress
+Invoke-RestMethod -Uri 'https://studio.genlayer.com/api' -Method Post -ContentType 'application/json' -Headers @{ 'x-session-id' = $sessionId } -Body $request
+# {"jsonrpc":"2.0","error":{"code":-32001,"message":"Contract 0x0000000000000000000000000000000000000000 not found","data":{"contract_address":"0x0000000000000000000000000000000000000000"}},"id":131}
+```
+
+These controls further isolate the blocker to hosted `gen_call` deploy routing/implementation. They do not produce a method receipt or runtime response object, so the `status_code` versus `status` field remains unverified. No simulation, deployment, signature, transaction, or chain write was sent.
+
 ## Live evidence status
 
 - Studio contract address: Not deployed; PRE_DEPLOY is required first.
@@ -139,4 +153,4 @@ Session control on 2026-09-01: the current Studio client bundle uses a WebSocket
 
 ## Known limitations and next gate
 
-The cached Direct Mode runner is `py-genlayer:1jb45aa8ynh2a9c9xn3b7qqh8sm5q93hwfp7jqmwsfhh8jpz09h6` and exposes `Response.status`; the current online web-access documentation uses `status_code` in its example. The production source now accepts either documented shape and fails closed when neither exists, while the dated Studio control remains blocked before probe-method execution. No live contract evidence is inferred from local green tests or the schema-only RPC call. PRE_DEPLOY remains blocked until the targeted hosted no-write probe executes or the governing runtime source/dependency is otherwise confirmed.
+The cached Direct Mode runner is `py-genlayer:1jb45aa8ynh2a9c9xn3b7qqh8sm5q93hwfp7jqmwsfhh8jpz09h6` and exposes `Response.status`; the current online web-access documentation uses `status_code` in its example. The hosted Studio endpoint additionally rejects documented `gen_call.status: "accepted"` and requires `"decided"`, while the current Node API page documents `accepted`; the production source now accepts either response-field shape and fails closed when neither exists. The dated Studio controls remain blocked before probe-method execution. No live contract evidence is inferred from local green tests or the schema-only RPC call. PRE_DEPLOY remains blocked until the targeted hosted no-write probe executes or the governing runtime/source compatibility is otherwise confirmed.
