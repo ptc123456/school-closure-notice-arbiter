@@ -1,6 +1,6 @@
 # Verification
 
-This document records the current local build checkpoint. It is not a PRE_DEPLOY, live Studio, GitHub, or Vercel approval.
+This document records the exact local build and live Studio evidence package. It is not a GitHub, Vercel, or release approval.
 
 ## Exact revision
 
@@ -11,8 +11,8 @@ This document records the current local build checkpoint. It is not a PRE_DEPLOY
 - Runtime conflict probe commit: `ac9b535f8d541d5b4e4536700401e603d2f60444`
 - Current public-tree commit: recorded in the GitHub Presentation Pre-Push Report immediately before any push; this document intentionally identifies the exact source/frontend commits rather than self-referencing a future documentation commit.
 - Contract: `SchoolClosureNoticeArbiter`
-- Network: Studionet is the intended release network; no contract is deployed yet.
-- Studio deployer/upgrader: `0x34b92E6553eaCA11A00A9d86d75d8a7881779D78`, directly selected in the signed-in GenLayer Studio session; no signature has been requested.
+- Network: Studionet.
+- Studio deployer/upgrader: `0x34b92E6553eaCA11A00A9d86d75d8a7881779D78`, directly selected in the signed-in GenLayer Studio session.
 - Current exact local-tree commit: recorded in the exact re-review package after the final commit; no GitHub push has occurred.
 
 ## Contract inventory
@@ -142,17 +142,30 @@ These controls further isolate the blocker to hosted `gen_call` deploy routing/i
 
 Studio client route control on 2026-09-01: the current hosted bundle `https://studio.genlayer.com/assets/index-D-dlGG4S.js` calls `gen_getContractSchemaForCode` for undeployed source, uses `gen_call` for read/write calls whose `to` is an existing contract address, and implements `deployContract` through signed transaction encoding to the zero-address deploy target. The visible Run Debug control therefore has no separate hosted no-write deploy-method execution path: its `Deploy` action would be a deployment/signature, which is prohibited before PRE_DEPLOY. This explains why the available no-write API control is the documented `gen_call` deploy route and why the observed zero-address failure cannot be bypassed through the UI without violating the gate.
 
+## Studio deployment and E2E evidence
+
+Executed in Codex in-app Browser, Studio Run Debug, on 2026-09-01, using Normal (Full Consensus) and the locked account `0x34b92E6553eaCA11A00A9d86d75d8a7881779D78`. The exact uploaded source was the reviewed contract source with SHA-256 `BA62C92CACD85386D2356CAE88760FED167CC6075F563BEE099B3676DCE22B39`; constructor arguments were none.
+
+- Deployment: contract `0x03E832036EDBCF96AEa03D64AB41Bc79d63b9A6f`; transaction `0x736da42eebd02af3e7627b935c331fde4be233777ed2fd80676ba3018dfb0b79`; `FINALIZED`, `SUCCESS`; Explorer: https://explorer-studio.genlayer.com/address/0x03E832036EDBCF96AEa03D64AB41Bc79d63b9A6f.
+- `create_case(studio-e2e-unresolved-01, STUDIO-E2E-SCHOOL, https://example.com/studio-e2e-missing-a, https://example.com/studio-e2e-missing-b)`: `0x7d8b5f863b0bb39455716465dc5ca90c66c4fe1648d2c47e896611c0add2b663`; `FINALIZED`, `SUCCESS`; return `studio-e2e-unresolved-01`; readback `DRAFT`, empty outcome, retry count `0`.
+- `freeze_case(studio-e2e-unresolved-01)`: `0xb44cd082c665fa7f6ac542bc30422493e8195bf2b0c7e837ad78737ac315ac62`; `FINALIZED`, `SUCCESS`; return `FROZEN`; readback `FROZEN`.
+- `assess(studio-e2e-unresolved-01)`: `0xbe0433392829489938ee351178148563cf546bb9728cd4de5ea7adf4cadfc4eb`; `FINALIZED`, `SUCCESS`; return `RETRYABLE:UNRESOLVED`; hosted equivalence output recorded both URL transports as `MISSING`; readback `RETRYABLE`, outcome `UNRESOLVED`, retry count `0`; evidence digest `5bb85d235c4934bb60be8f93de907be0affd68e35a44c96a07791e49cdfce79a`.
+- `retry_unresolved(studio-e2e-unresolved-01)`: `0x97a16e42f6180ac505d2cec51df0787c476f71de3218ffd948a71dde9855a7b1`; `FINALIZED`, `SUCCESS`; return `RETRYABLE:UNRESOLVED`; readback `RETRYABLE`, outcome `UNRESOLVED`, retry count `1`.
+- Final authoritative views agreed: `get_case` reported `state=RETRYABLE`, `outcome=UNRESOLVED`, `retry_count=1`; `get_case_state` reported `RETRYABLE`.
+
+One UI-control error is retained as negative evidence: `freeze_case` transaction `0xdef9b50b9191ba7dd4985dbf592b52f897a594d64f971c049f521e5c48f1d4ac` reached `FINALIZED` with `ERROR` and validator rollback `case is not in DRAFT state`. It produced no state change and was not retried. The browser kernel reset during an earlier receipt wait; the persisted Studio page was re-read and no replacement transaction was submitted.
+
 ## Live evidence status
 
-- Studio contract address: Not deployed; PRE_DEPLOY is required first.
-- Studio account selection: deployer/upgrader `0x34b92E6553eaCA11A00A9d86d75d8a7881779D78` selected and recorded; no deployment/signature/write sent.
-- Deployment transaction / Explorer: Not available.
-- Deployment-source parity: Not available until deployment.
-- Live web URL: Not deployed.
-- Studio E2E matrix: Not run.
+- Studio contract address: `0x03E832036EDBCF96AEa03D64AB41Bc79d63b9A6f`.
+- Studio account selection: deployer/upgrader `0x34b92E6553eaCA11A00A9d86d75d8a7881779D78`.
+- Deployment transaction / Explorer: `0x736da42eebd02af3e7627b935c331fde4be233777ed2fd80676ba3018dfb0b79` / https://explorer-studio.genlayer.com/address/0x03E832036EDBCF96AEa03D64AB41Bc79d63b9A6f.
+- Deployment-source parity: exact uploaded source and deployed Studio editor remained bound to SHA-256 `BA62C92CACD85386D2356CAE88760FED167CC6075F563BEE099B3676DCE22B39`; no upgrade occurred.
+- Live web URL: Not deployed by design.
+- Studio E2E matrix: executed; four intended writes finalized successfully, plus one recorded finalized rollback from the initial UI selector error.
 - GitHub URL: Not configured or pushed.
 - Vercel E2E: Not run by design; this task stops before Vercel.
 
 ## Known limitations and next gate
 
-The cached Direct Mode runner is `py-genlayer:1jb45aa8ynh2a9c9xn3b7qqh8sm5q93hwfp7jqmwsfhh8jpz09h6` and exposes `Response.status`; the current online web-access documentation uses `status_code` in its example. The hosted Studio endpoint additionally rejects documented `gen_call.status: "accepted"` and requires `"decided"`, while the current Node API page documents `accepted`; the production source now accepts either response-field shape and fails closed when neither exists. The dated Studio controls remain blocked before probe-method execution. No live contract evidence is inferred from local green tests or the schema-only RPC call. PRE_DEPLOY remains blocked until the targeted hosted no-write probe executes or the governing runtime/source compatibility is otherwise confirmed.
+The cached Direct Mode runner is `py-genlayer:1jb45aa8ynh2a9c9xn3b7qqh8sm5q93hwfp7jqmwsfhh8jpz09h6` and exposes `Response.status`; the current online web-access documentation uses `status_code` in its example. The production source accepts either response-field shape and fails closed when neither exists. The hosted assess receipt above is now the live Studio execution evidence for this exact deployed source; its equivalent output records both external responses as `MISSING`, and the intended unresolved retry path completed with authoritative readback. This evidence package is pending anonymous `POST_DEPLOY_TEST` review. GitHub, Vercel, and release actions remain out of scope.

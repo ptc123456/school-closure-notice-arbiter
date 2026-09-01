@@ -1,6 +1,6 @@
 # E2E TEST PLAN
 
-Status: awaiting anonymous `E2E TEST PLAN` approval before any Studio transaction.
+Status: approved plan executed in Studio; awaiting anonymous `POST_DEPLOY_TEST` review for the evidence package.
 
 ## Exact scope
 
@@ -65,3 +65,16 @@ Record every attempted case as `PASS`, `FAIL`, or `BLOCKED`. At the first failur
 - The deployed source hash equals `BA62C92CACD85386D2356CAE88760FED167CC6075F563BEE099B3676DCE22B39`.
 - No duplicate transaction is submitted and no write remains unreconciled.
 - Studio evidence is sufficient to request anonymous `POST_DEPLOY_TEST` review for this exact deployed source and evidence package.
+
+## Executed evidence
+
+Executed on 2026-09-01 in Codex in-app Browser, Studio Run Debug, Normal (Full Consensus), locked account `0x34b92E6553eaCA11A00A9d86d75d8a7881779D78`.
+
+- Deployment: `0x736da42eebd02af3e7627b935c331fde4be233777ed2fd80676ba3018dfb0b79`, contract `0x03E832036EDBCF96AEa03D64AB41Bc79d63b9A6f`, `FINALIZED / SUCCESS`.
+- `create_case`: `0x7d8b5f863b0bb39455716465dc5ca90c66c4fe1648d2c47e896611c0add2b663`, `FINALIZED / SUCCESS`, readback `DRAFT`, retry `0`.
+- `freeze_case`: `0xb44cd082c665fa7f6ac542bc30422493e8195bf2b0c7e837ad78737ac315ac62`, `FINALIZED / SUCCESS`, readback `FROZEN`.
+- `assess`: `0xbe0433392829489938ee351178148563cf546bb9728cd4de5ea7adf4cadfc4eb`, `FINALIZED / SUCCESS`, `RETRYABLE:UNRESOLVED`, both web responses `MISSING`, readback `RETRYABLE / UNRESOLVED / retry_count=0`, digest `5bb85d235c4934bb60be8f93de907be0affd68e35a44c96a07791e49cdfce79a`.
+- `retry_unresolved`: `0x97a16e42f6180ac505d2cec51df0787c476f71de3218ffd948a71dde9855a7b1`, `FINALIZED / SUCCESS`, readback `RETRYABLE / UNRESOLVED / retry_count=1`.
+- Final `get_case` and `get_case_state` both returned `RETRYABLE`.
+
+An additional UI selector error is retained: `freeze_case` `0xdef9b50b9191ba7dd4985dbf592b52f897a594d64f971c049f521e5c48f1d4ac` finalized with `ERROR` (`case is not in DRAFT state`) and did not mutate the case. No replacement or duplicate successful write was submitted. The evidence package records this exception for reviewer disposition.
