@@ -4,8 +4,8 @@ This document records the current local build checkpoint. It is not a PRE_DEPLOY
 
 ## Exact revision
 
-- Contract/source commit: `a8bd6ea66fa7731e8f763b3dec443a3407927ba0`
-- Contract source SHA-256 at that commit: `3A1FBAD7B8D148A81765E02BF2F213E08457E8A37674CC9EC461B6785540E43F`
+- Contract/source compatibility correction commit: `402ebae4625f9f54c2fc938b07b4fcf281588bb8`
+- Contract source SHA-256 at that commit: `BA62C92CACD85386D2356CAE88760FED167CC6075F563BEE099B3676DCE22B39`
 - Frontend hardening baseline commit: `4c6fdadd52d824b9d1fc8a261f8387c13cb0a4cc`
 - Frontend transaction/recovery correction commit: `9836b2cd6c201507260e029ad35793b2f4919e06`
 - Runtime conflict probe commit: `ac9b535f8d541d5b4e4536700401e603d2f60444`
