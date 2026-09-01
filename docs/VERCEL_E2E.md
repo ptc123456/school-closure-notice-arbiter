@@ -15,6 +15,7 @@ Status: critical journey completed on the public production alias; final anonymo
 - Vercel deployment used for the completed journey: `dpl_55Cz78AE8LEDWXSB5wJHHM5wLmgm`
 - Exact deployment URL: https://school-closure-notice-arbiter-mvlo61nty-shingg.vercel.app/
 - Public evidence package revision reviewed before this documentation correction: `1c4e86126abb132fd779537e3b5233f484848480`
+- Refreshed final GitHub HEAD for this correction package: `8717262dd5488531513aea0503672d2b22101a27`
 
 ## Judge-facing smoke
 

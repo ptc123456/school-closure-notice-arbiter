@@ -10,6 +10,7 @@ This document records the exact local build and live Studio evidence package. It
 - Frontend transaction/recovery correction commit: `9836b2cd6c201507260e029ad35793b2f4919e06`
 - Runtime conflict probe commit: `ac9b535f8d541d5b4e4536700401e603d2f60444`
 - Public evidence package revision reviewed before this documentation correction: `1c4e86126abb132fd779537e3b5233f484848480`.
+- Refreshed final GitHub HEAD for this correction package: `8717262dd5488531513aea0503672d2b22101a27`.
 - Functional Vercel release commit: `a4505b9d266b37a305bbaf8c47c9990bd314a827`.
 - Functional Vercel deployment URL: https://school-closure-notice-arbiter-mvlo61nty-shingg.vercel.app/.
 - Contract: `SchoolClosureNoticeArbiter`
