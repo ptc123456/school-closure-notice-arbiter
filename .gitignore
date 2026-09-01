@@ -12,3 +12,7 @@ STAGE-*.md
 probe_*.py
 runtime_status_probe.py
 test_probe.py
+.vercel/
+
+.vercel
+.env*
