@@ -124,6 +124,8 @@ This confirms the hosted route still rejects the zero-address no-write deploy be
 
 Route-shape control on 2026-09-01 at 09:45 +07:00: the same no-write deploy payload with `to` omitted (request id `61`) returned `{"jsonrpc":"2.0","error":{"code":-32603,"message":"'to'"},"id":61`, confirming that the hosted endpoint requires the documented `to` field and still does not expose an alternate deploy route. The official Node API documentation says deploy `gen_call` must use the zero address and that deploy bypasses contract-state validation; the observed `-32001` therefore remains a hosted implementation/routing failure before GenVM execution.
 
+Session control on 2026-09-01: the current Studio client bundle uses a WebSocket at `wss://studio.genlayer.com/ws` and sends `x-session-id: ws-<timestamp>` on RPC requests. A no-write control first confirmed `sim_getAllValidators` returned 20 with that session format. A real WebSocket session was then opened and the isolated deploy payload was sent through `gen_call` with that session header (request id `101`); it still returned the same zero-address `-32001` before execution. A session-correct `sim_call` control using the same deploy payload (request id `111`) also returned the same zero-address `-32001`. Thus the route failure is reproducible with the hosted session protocol, not merely an unauthenticated PowerShell request.
+
 ## Live evidence status
 
 - Studio contract address: Not deployed; PRE_DEPLOY is required first.
