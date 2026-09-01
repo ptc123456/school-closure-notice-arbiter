@@ -161,11 +161,11 @@ One UI-control error is retained as negative evidence: `freeze_case` transaction
 - Studio account selection: deployer/upgrader `0x34b92E6553eaCA11A00A9d86d75d8a7881779D78`.
 - Deployment transaction / Explorer: `0x736da42eebd02af3e7627b935c331fde4be233777ed2fd80676ba3018dfb0b79` / https://explorer-studio.genlayer.com/address/0x03E832036EDBCF96AEa03D64AB41Bc79d63b9A6f.
 - Deployment-source parity: the independent RPC-returned deployed contract code hashes to SHA-256 `BA62C92CACD85386D2356CAE88760FED167CC6075F563BEE099B3676DCE22B39`; exact uploaded source matched and no upgrade occurred.
-- Live web URL: Not deployed by design.
+- Live web URL: https://school-closure-notice-arbiter.vercel.app/; final Vercel evidence is recorded in [`docs/VERCEL_E2E.md`](VERCEL_E2E.md).
 - Studio E2E matrix: executed; four intended writes finalized successfully, plus one recorded finalized rollback from the initial UI selector error.
-- GitHub URL: Not configured or pushed.
-- Vercel E2E: Not run by design; this task stops before Vercel.
+- GitHub URL: https://github.com/ptc123456/school-closure-notice-arbiter.
+- Vercel E2E: critical journey completed on the public production alias; see [`docs/VERCEL_E2E.md`](VERCEL_E2E.md).
 
 ## Known limitations and next gate
 
-The cached Direct Mode runner is `py-genlayer:1jb45aa8ynh2a9c9xn3b7qqh8sm5q93hwfp7jqmwsfhh8jpz09h6` and exposes `Response.status`; the current online web-access documentation uses `status_code` in its example. The production source accepts either response-field shape and fails closed when neither exists. The hosted assess receipt above executed the live web path for this exact deployed source; its equivalent output records both external responses as `MISSING`, and the intended unresolved retry path completed with authoritative readback. Anonymous `POST_DEPLOY_TEST` is approved for this exact package. GitHub publication, Vercel deployment/E2E, and release completion remain pending the final checkpoint.
+The cached Direct Mode runner is `py-genlayer:1jb45aa8ynh2a9c9xn3b7qqh8sm5q93hwfp7jqmwsfhh8jpz09h6` and exposes `Response.status`; the current online web-access documentation uses `status_code` in its example. The production source accepts either response-field shape and fails closed when neither exists. The hosted assess receipt above executed the live web path for this exact deployed source; its equivalent output records both external responses as `MISSING`, and the intended unresolved retry path completed with authoritative readback. Anonymous `POST_DEPLOY_TEST` is approved for the Studio package. The final Vercel E2E package is complete; anonymous `POST_GITHUB_VERCEL_FINAL` review remains the next gate.

@@ -6,7 +6,7 @@ GenLayer Intelligent Contract that compares two independently published school-c
 
 - Studionet contract: [`0x03E832036EDBCF96AEa03D64AB41Bc79d63b9A6f`](https://explorer-studio.genlayer.com/address/0x03E832036EDBCF96AEa03D64AB41Bc79d63b9A6f)
 - Explorer: [view the deployed contract](https://explorer-studio.genlayer.com/address/0x03E832036EDBCF96AEa03D64AB41Bc79d63b9A6f)
-- The static UI is in `frontend/`; a public Vercel URL is not configured in this checkpoint.
+- Live app: [school-closure-notice-arbiter.vercel.app](https://school-closure-notice-arbiter.vercel.app/)
 
 ## Trust problem and why GenLayer
 
@@ -50,7 +50,7 @@ genvm-lint schema .\contracts\school_closure_notice_arbiter.py
 genvm-lint typecheck .\contracts\school_closure_notice_arbiter.py
 ```
 
-The browser frontend is a static no-install surface. It loads the pinned GenLayerJS ESM build at runtime and implements EIP-6963 wallet selection, exact provider routing, transaction finality/execution checks, and authoritative readback. The local browser smoke and dependency-free frontend suite pass; live Vercel E2E is a later release checkpoint.
+The browser frontend is a static no-install surface. It loads the pinned GenLayerJS ESM build at runtime and implements explicit wallet selection, exact provider routing, transaction finality/execution checks, and authoritative readback. The local browser smoke and dependency-free frontend suite pass; the final Vercel E2E evidence is recorded in [`docs/VERCEL_E2E.md`](docs/VERCEL_E2E.md).
 
 ## Security and trust boundaries
 
@@ -58,4 +58,4 @@ Fetched notice bodies are untrusted data. The extraction prompt delimits them an
 
 ## Deployment and known limitations
 
-The deployed evidence target is Studionet. The exact uploaded contract source is deployed at the address above and RPC source parity hashes to `BA62C92CACD85386D2356CAE88760FED167CC6075F563BEE099B3676DCE22B39`. Studio E2E completed the unresolved path with `FINALIZED / SUCCESS` receipts and authoritative readback; see [`docs/VERIFICATION.md`](docs/VERIFICATION.md). The cached runner exposes `response.status`, while current documentation uses `status_code`; the production helper accepts both and fails closed for invalid shapes. GitHub publication, Vercel deployment, and final Vercel E2E remain pending their release checkpoint.
+The deployed evidence target is Studionet. The exact uploaded contract source is deployed at the address above and RPC source parity hashes to `BA62C92CACD85386D2356CAE88760FED167CC6075F563BEE099B3676DCE22B39`. Studio E2E completed the unresolved path with `FINALIZED / SUCCESS` receipts and authoritative readback; see [`docs/VERIFICATION.md`](docs/VERIFICATION.md). The cached runner exposes `response.status`, while current documentation uses `status_code`; the production helper accepts both and fails closed for invalid shapes. GitHub publication and the final Vercel E2E are recorded in [`docs/VERCEL_E2E.md`](docs/VERCEL_E2E.md).
