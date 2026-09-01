@@ -28,7 +28,7 @@ This document records the current local build checkpoint. It is not a PRE_DEPLOY
 ```powershell
 $env:PYTHONIOENCODING='utf-8'
 py -3.13 -m pytest -q -p no:cacheprovider
-# 26 passed
+# 27 passed
 genvm-lint check .\contracts\school_closure_notice_arbiter.py
 # Lint passed; Validation passed
 genvm-lint schema .\contracts\school_closure_notice_arbiter.py
@@ -77,7 +77,7 @@ py -3.13 -m pytest -q .\runtime_status_probe.py -p no:cacheprovider
 # probe_status_code_contract.py:14: return gl.nondet.web.get(url).status_code
 ```
 
-The production-shaped replacement probe uses `response.status` in `test_probe.py` and passes as part of the 26-test contract suite.
+The production contract now uses `_response_status`: it first reads documented `response.status_code`, falls back to cached-runner `response.status`, and returns `-1` for an invalid response shape. The helper regression test executes the function extracted from the exact contract source against documented, cached-runner, and invalid shapes; the Direct Mode suite also exercises the cached-runner `status` branch.
 
 No-write Studionet schema probe, run 2026-09-01 (RPC `https://studio.genlayer.com/api`):
 
@@ -111,7 +111,7 @@ Invoke-RestMethod -Uri 'https://studio.genlayer.com/api' -Method Post -ContentTy
 # {"jsonrpc":"2.0","error":{"code":-32001,"message":"Contract 0x0000000000000000000000000000000000000000 not found","data":{"contract_address":"0x0000000000000000000000000000000000000000}},"id":31}
 ```
 
-The payload is accepted far enough to return the hosted resource-not-found response, but the deploy probe method is not executed. Retrying the same no-write deploy payload with `leader_only=True` (request id `33`) returned the same `-32001` zero-address not-found response. This remains a hosted Studio control failure, not a runtime verdict for `status_code` versus `status`.
+The payload is accepted far enough to return the hosted resource-not-found response, but the deploy probe method is not executed. Retrying the same no-write deploy payload with `leader_only=True` (request id `33`) returned the same `-32001` zero-address not-found response. This remains a hosted Studio control failure, not a runtime verdict for `status_code` versus `status`. The source-side compatibility correction removes the need to choose one field at build time, but it does not substitute for the required hosted execution evidence.
 
 ## Live evidence status
 
@@ -126,4 +126,4 @@ The payload is accepted far enough to return the hosted resource-not-found respo
 
 ## Known limitations and next gate
 
-The cached Direct Mode runner is `py-genlayer:1jb45aa8ynh2a9c9xn3b7qqh8sm5q93hwfp7jqmwsfhh8jpz09h6` and exposes `Response.status`. The current online web-access documentation uses `status_code` in its example. Production therefore stays on the verified runner-compatible `status` field, while the dated Studio control and its rate-limit blocker are explicitly recorded. No live contract evidence is inferred from local green tests or the schema-only RPC call.
+The cached Direct Mode runner is `py-genlayer:1jb45aa8ynh2a9c9xn3b7qqh8sm5q93hwfp7jqmwsfhh8jpz09h6` and exposes `Response.status`; the current online web-access documentation uses `status_code` in its example. The production source now accepts either documented shape and fails closed when neither exists, while the dated Studio control remains blocked before probe-method execution. No live contract evidence is inferred from local green tests or the schema-only RPC call. PRE_DEPLOY remains blocked until the targeted hosted no-write probe executes or the governing runtime source/dependency is otherwise confirmed.

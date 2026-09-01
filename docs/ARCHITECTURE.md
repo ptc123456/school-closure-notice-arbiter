@@ -16,10 +16,10 @@ Date-only ISO values are accepted. Local timestamps, HTTP `Date`/`Last-Modified`
 
 - Original choice: use the web response status field shown in the current web-access documentation as `status_code`.
 - Verified issue/authority: the installed official cached Direct Mode runner `py-genlayer` `1jb45aa8ynh2a9c9xn3b7qqh8sm5q93hwfp7jqmwsfhh8jpz09h6` exposes `Response.status`; the local probe failed with `AttributeError` when using `status_code`.
-- Replacement: use `response.status` and map `404/410` to `MISSING`, `0/429/5xx` to retryable `UNAVAILABLE`, and other non-2xx responses to `MALFORMED`.
+- Replacement: `_response_status` prefers documented `response.status_code`, falls back to cached-runner `response.status`, and returns `-1` when neither shape is a valid integer; map `404/410` to `MISSING`, `0/429/5xx` to retryable `UNAVAILABLE`, and other non-2xx responses to `MALFORMED`.
 - Preserved outcomes: source identity, date comparison, declared revision semantics, retry behavior, and no HTTP timestamp authority are unchanged.
 - Affected verification: `test_probe.py` and `tests/test_contract.py` cover status handling, bounded extraction, disagreement, missing fields, and retryability.
-- Residual risk: the current online documentation and the cached runner differ on this field name. The 2026-09-01 no-write schema probe passed for both the production source and isolated probe, but hosted Studio Run Debug could not execute the isolated method because the session reported no usable validator and hosted `gen_call` deploy returned a zero-address not-found error; the disputed field remains unverified.
+- Runtime compatibility resolution: the contract now accepts both the documented `status_code` response shape and the installed runner's `status` shape, with a fail-closed invalid-shape fallback. The 2026-09-01 no-write schema probe passed for both the production source and isolated probe, but hosted Studio's no-write deploy routing returned a zero-address not-found error before executing the isolated method; the exact hosted field remains recorded as unverified.
 
 - Original choice: follow the current documentation's dependency prologue alone.
 - Verified issue/authority: the build experience record requires the runner version line before the dependency manifest for the live text runner, while current lint accepts both.

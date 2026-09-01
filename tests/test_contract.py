@@ -1,4 +1,6 @@
+import ast
 import json
+from pathlib import Path
 
 import pytest
 
@@ -6,6 +8,32 @@ import pytest
 CONTRACT = "contracts/school_closure_notice_arbiter.py"
 URL_A = "https://notices.test/a"
 URL_B = "https://notices.test/b"
+
+
+def test_response_status_supports_documented_and_cached_runner_shapes():
+    source = Path(CONTRACT).read_text(encoding="utf-8")
+    tree = ast.parse(source, filename=CONTRACT)
+    helper = next(
+        node
+        for node in tree.body
+        if isinstance(node, ast.FunctionDef) and node.name == "_response_status"
+    )
+    namespace = {}
+    exec(compile(ast.Module(body=[helper], type_ignores=[]), CONTRACT, "exec"), namespace)
+    response_status = namespace["_response_status"]
+
+    class DocumentedResponse:
+        status_code = 200
+
+    class CachedRunnerResponse:
+        status = 201
+
+    class InvalidResponse:
+        pass
+
+    assert response_status(DocumentedResponse()) == 200
+    assert response_status(CachedRunnerResponse()) == 201
+    assert response_status(InvalidResponse()) == -1
 
 
 def notice(

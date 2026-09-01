@@ -101,9 +101,17 @@ def _empty_notice(transport: str) -> dict[str, str]:
     }
 
 
+def _response_status(response) -> int:
+    documented_status = getattr(response, "status_code", None)
+    if isinstance(documented_status, int):
+        return documented_status
+    runner_status = getattr(response, "status", None)
+    return runner_status if isinstance(runner_status, int) else -1
+
+
 def _extract_notice(url: str) -> dict[str, str]:
     response = gl.nondet.web.get(url)
-    status = response.status
+    status = _response_status(response)
     if status == 404 or status == 410:
         return _empty_notice("MISSING")
     if status == 0 or status == 429 or status >= 500:
