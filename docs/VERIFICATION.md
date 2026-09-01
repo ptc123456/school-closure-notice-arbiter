@@ -9,11 +9,13 @@ This document records the exact local build and live Studio evidence package. It
 - Frontend hardening baseline commit: `4c6fdadd52d824b9d1fc8a261f8387c13cb0a4cc`
 - Frontend transaction/recovery correction commit: `9836b2cd6c201507260e029ad35793b2f4919e06`
 - Runtime conflict probe commit: `ac9b535f8d541d5b4e4536700401e603d2f60444`
-- Current public-tree commit: this evidence package commit, updated before GitHub pre-push review.
+- Public evidence package revision reviewed before this documentation correction: `1c4e86126abb132fd779537e3b5233f484848480`.
+- Functional Vercel release commit: `a4505b9d266b37a305bbaf8c47c9990bd314a827`.
+- Functional Vercel deployment URL: https://school-closure-notice-arbiter-mvlo61nty-shingg.vercel.app/.
 - Contract: `SchoolClosureNoticeArbiter`
 - Network: Studionet.
 - Studio deployer/upgrader: `0x34b92E6553eaCA11A00A9d86d75d8a7881779D78`, directly selected in the signed-in GenLayer Studio session.
-- Current exact local-tree commit: recorded in the exact re-review package; no GitHub push has occurred.
+- The documentation correction is submitted as a direct successor to the exact public evidence package revision above; the correction commit is recorded in the refreshed anonymous re-review package.
 
 ## Contract inventory
 

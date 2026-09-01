@@ -11,7 +11,10 @@ Status: critical journey completed on the public production alias; final anonymo
 - Contract: `0x03E832036EDBCF96AEa03D64AB41Bc79d63b9A6f`
 - Contract source SHA-256: `BA62C92CACD85386D2356CAE88760FED167CC6075F563BEE099B3676DCE22B39`
 - Browser wallet: separate OKX Wallet account `0x896Ef52d620eA3CCdA34B4E72a8E197974e4e39E`
+- Functional Vercel release commit: `a4505b9d266b37a305bbaf8c47c9990bd314a827`
 - Vercel deployment used for the completed journey: `dpl_55Cz78AE8LEDWXSB5wJHHM5wLmgm`
+- Exact deployment URL: https://school-closure-notice-arbiter-mvlo61nty-shingg.vercel.app/
+- Public evidence package revision reviewed before this documentation correction: `1c4e86126abb132fd779537e3b5233f484848480`
 
 ## Judge-facing smoke
 
@@ -47,3 +50,5 @@ Final independent readback:
 The first Vercel `freeze_case` observation exposed a frontend compatibility defect: GenLayerJS returned numeric `status=7` and `result=6`, with the successful leader return nested in `consensus_data.leader_receipt`. The coordinator required only named fields and reported a false verification failure before readback. The repair added bounded current-SDK field normalization, regression coverage, and a versioned module import to avoid stale browser code. The same original hash was then reconciled successfully after reload; no replacement transaction was submitted.
 
 Automated checks after the repair: frontend regression `9 passed`, JavaScript syntax checks passed, `git diff --check` passed, and the project governance audit passed.
+
+The exact reproducible contract suite for the final source is `26 passed` (`py -3.13 -m pytest -q -p no:cacheprovider`).
