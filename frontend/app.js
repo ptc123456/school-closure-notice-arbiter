@@ -1,6 +1,6 @@
 import { createClient } from "https://esm.sh/genlayer-js@1.1.8?bundle";
 import { studionet } from "https://esm.sh/genlayer-js@1.1.8/chains?bundle";
-import { MIN_SPENDABLE_WEI, attachSessionListeners, connectWallet, focusTrap, inspectPending, reconcilePending, runTransaction } from "./logic.js";
+import { MIN_SPENDABLE_WEI, attachSessionListeners, connectWallet, focusTrap, inspectPending, reconcilePending, runTransaction } from "./logic.js?v=edbec0a";
 
 const $ = (id) => document.getElementById(id);
 const WALLET_SPECS = [
