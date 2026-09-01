@@ -1,0 +1,110 @@
+/* Hallmark · macrostructure: Workbench · genre: editorial · theme: Forest-Lime
+ * tokens: OKLCH color system, 4pt spacing scale, semantic radii, transitions
+ */
+
+:root {
+  color-scheme: dark;
+
+  /* Surfaces & Paper */
+  --color-base: oklch(14% 0.02 155);
+  --color-base-deep: oklch(12% 0.015 155);
+  --color-base-radial: oklch(24% 0.06 145 / 0.45);
+  --color-paper: oklch(17% 0.025 155);
+  --color-paper-2: oklch(20% 0.03 155);
+  --color-paper-3: oklch(24% 0.035 155);
+  --color-paper-card: oklch(18% 0.028 155);
+
+  /* Ink & Typography */
+  --color-ink: oklch(96% 0.015 140);
+  --color-ink-2: oklch(82% 0.02 145);
+  --color-muted: oklch(66% 0.025 150);
+  --color-muted-dark: oklch(52% 0.02 150);
+
+  /* Borders & Rules */
+  --color-rule: oklch(28% 0.035 155);
+  --color-rule-subtle: oklch(22% 0.025 155);
+  --color-rule-focus: oklch(84% 0.19 128);
+
+  /* Accents */
+  --color-accent: oklch(84% 0.19 128);
+  --color-accent-hover: oklch(88% 0.21 128);
+  --color-accent-active: oklch(80% 0.18 128);
+  --color-accent-ink: oklch(15% 0.05 135);
+
+  --color-accent-amber: oklch(82% 0.16 85);
+  --color-accent-amber-hover: oklch(86% 0.18 85);
+  --color-accent-amber-ink: oklch(15% 0.04 85);
+
+  /* Status Colors */
+  --color-success: oklch(78% 0.17 142);
+  --color-success-bg: oklch(22% 0.06 142);
+  --color-success-border: oklch(35% 0.10 142);
+
+  --color-error: oklch(72% 0.18 25);
+  --color-error-bg: oklch(20% 0.06 25);
+  --color-error-border: oklch(36% 0.12 25);
+
+  --color-info: oklch(75% 0.14 220);
+  --color-info-bg: oklch(20% 0.05 220);
+  --color-info-border: oklch(34% 0.09 220);
+
+  --color-warning: oklch(80% 0.16 85);
+  --color-warning-bg: oklch(22% 0.06 85);
+  --color-warning-border: oklch(36% 0.11 85);
+
+  /* Overlays & Backdrops */
+  --color-step-overlay: oklch(0% 0 0 / 0.15);
+  --color-step-overlay-border: oklch(0% 0 0 / 0.2);
+  --color-backdrop: oklch(8% 0.02 155 / 0.78);
+
+  /* Shadows */
+  --shadow-card: 0 8px 30px oklch(0% 0 0 / 0.25);
+  --shadow-dialog: 0 24px 80px oklch(0% 0 0 / 0.55);
+  --shadow-bar: 0 4px 20px oklch(0% 0 0 / 0.15);
+  --shadow-indicator: 0 0 8px var(--color-accent);
+  --shadow-indicator-error: 0 0 8px var(--color-error);
+
+  /* Focus & Interactive */
+  --color-focus: oklch(84% 0.19 128);
+
+  /* Typography Stacks */
+  --font-display: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-body: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-mono: ui-monospace, "Cascadia Code", "Source Code Pro", Menlo, Consolas, monospace;
+
+  /* 4-point Spacing Scale */
+  --space-3xs: 0.25rem;   /* 4px */
+  --space-2xs: 0.5rem;    /* 8px */
+  --space-xs: 0.75rem;    /* 12px */
+  --space-sm: 1rem;       /* 16px */
+  --space-md: 1.5rem;     /* 24px */
+  --space-lg: 2rem;       /* 32px */
+  --space-xl: 3rem;       /* 48px */
+  --space-2xl: 4rem;      /* 64px */
+
+  /* Type Scale */
+  --text-xs: 0.75rem;     /* 12px */
+  --text-sm: 0.875rem;    /* 14px */
+  --text-base: 1rem;      /* 16px */
+  --text-md: 1.125rem;    /* 18px */
+  --text-lg: 1.25rem;     /* 20px */
+  --text-xl: 1.5rem;      /* 24px */
+  --text-2xl: 1.875rem;   /* 30px */
+  --text-3xl: 2.25rem;    /* 36px */
+
+  /* Radius Scale */
+  --radius-xs: 4px;
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-xl: 20px;
+  --radius-pill: 9999px;
+
+  /* Motion */
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --dur-fast: 150ms;
+  --dur-normal: 220ms;
+
+  /* Layout */
+  --touch-target-min: 44px;
+}

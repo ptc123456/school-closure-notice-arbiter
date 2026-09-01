@@ -2,62 +2,151 @@
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <title>School Closure Notice Arbiter</title>
     <link rel="stylesheet" href="./styles.css" />
   </head>
   <body>
     <main class="shell">
-      <header class="hero">
-        <div class="wallet-row">
-          <button id="connect" class="button primary">Connect wallet</button>
-          <span id="wallet-status" class="status">Not connected · connect a wallet to begin</span>
+      <header class="topbar">
+        <div class="brand">
+          <div class="brand-badge">
+            <span class="badge-dot"></span>
+            <span>STUDIONET PUBLIC RECORD ARBITER</span>
+          </div>
+          <h1 class="brand-title">School Closure Notice Arbiter</h1>
         </div>
-        <p class="eyebrow">GENLAYER · STUDIONET</p>
-        <h1>School Closure<br /><span>Notice Arbiter</span></h1>
-        <p class="lede">Compare two published notices. Keep the evidence visible. Never guess which source is newer.</p>
+        <div class="wallet-control">
+          <button id="connect" class="button button--wallet" type="button">Connect wallet</button>
+          <span id="wallet-status" class="wallet-status">Not connected · connect a wallet to begin</span>
+        </div>
       </header>
 
-      <section class="card">
-        <div class="section-heading"><span>01</span><h2>Case details</h2></div>
-        <label>Contract address<input id="contract" placeholder="0x…" autocomplete="off" /></label>
-        <label>Case ID<input id="case-id" value="school-closure-01" autocomplete="off" /></label>
-        <label>School ID<input id="school-id" placeholder="district-school-id" autocomplete="off" /></label>
-        <div class="two-up">
-          <label>Notice A URL<input id="url-a" type="url" placeholder="https://…" /></label>
-          <label>Notice B URL<input id="url-b" type="url" placeholder="https://…" /></label>
+      <div class="intro-statement">
+        <p class="intro-text">
+          Arbitrate conflicting school closure notices on Studionet. Submit official published notice URLs to evaluate notice freshness, verify reopening schedules, and record authoritative civic evidence on-chain.
+        </p>
+      </div>
+
+      <div class="workbench-grid">
+        <section class="panel panel--case" aria-labelledby="heading-case">
+          <div class="panel-header">
+            <span class="step-num">01</span>
+            <div class="panel-title-group">
+              <h2 id="heading-case">Case configuration & notice sources</h2>
+              <p class="panel-desc">Specify the target contract address, case parameters, and published notice URLs.</p>
+            </div>
+          </div>
+
+          <div class="form-grid">
+            <div class="form-group form-group--full">
+              <label for="contract">Contract address</label>
+              <input id="contract" placeholder="0x03E832036EDBCF96AEa03D64AB41Bc79d63b9A6f" spellcheck="false" autocomplete="off" />
+              <span class="helper-text">Deployed Studionet arbiter contract address</span>
+            </div>
+
+            <div class="form-group">
+              <label for="case-id">Case identifier</label>
+              <input id="case-id" value="school-closure-01" spellcheck="false" autocomplete="off" />
+              <span class="helper-text">Unique reference key for this arbitration</span>
+            </div>
+
+            <div class="form-group">
+              <label for="school-id">District school ID</label>
+              <input id="school-id" placeholder="e.g. dist-704-lincoln-high" spellcheck="false" autocomplete="off" />
+              <span class="helper-text">District or school institutional identifier</span>
+            </div>
+
+            <div class="form-group form-group--notice">
+              <label for="url-a"><span class="badge-source">Source A</span> Notice URL A</label>
+              <input id="url-a" type="url" placeholder="https://district.gov/notices/closure-01.html" spellcheck="false" />
+              <span class="helper-text">First published school closure notice URL</span>
+            </div>
+
+            <div class="form-group form-group--notice">
+              <label for="url-b"><span class="badge-source">Source B</span> Notice URL B</label>
+              <input id="url-b" type="url" placeholder="https://district.gov/notices/closure-02.html" spellcheck="false" />
+              <span class="helper-text">Second published school closure notice URL</span>
+            </div>
+          </div>
+
+          <div class="workflow-section">
+            <div class="workflow-header">
+              <h3 class="workflow-title">Case workflow actions</h3>
+              <p class="workflow-desc">Follow the lifecycle order: create case draft, freeze parameters, and run notice assessment.</p>
+            </div>
+            <div class="actions">
+              <button id="create" class="button button--secondary" type="button" disabled>
+                <span class="btn-step">1</span> Create case
+              </button>
+              <button id="freeze" class="button button--secondary" type="button" disabled>
+                <span class="btn-step">2</span> Freeze case
+              </button>
+              <button id="assess" class="button button--primary accent" type="button" disabled>
+                <span class="btn-step">3</span> Assess notices
+              </button>
+              <button id="retry" class="button button--secondary" type="button" disabled>
+                <span class="btn-step">4</span> Retry unresolved
+              </button>
+            </div>
+          </div>
+        </section>
+
+        <section class="panel panel--readback" aria-labelledby="heading-result">
+          <div class="panel-header panel-header--with-action">
+            <div class="panel-header-main">
+              <span class="step-num">02</span>
+              <div class="panel-title-group">
+                <h2 id="heading-result">Verified case record</h2>
+                <p class="panel-desc">On-chain case status, verified dates, and evidence integrity digest.</p>
+              </div>
+            </div>
+            <button id="read" class="button button--ghost" type="button" disabled>Fetch record</button>
+          </div>
+
+          <div id="readback" class="readback empty">
+            <div class="empty-state">
+              <div class="empty-state-icon">📋</div>
+              <p class="empty-state-title">No Case Record Loaded</p>
+              <p class="empty-state-desc">Connect a wallet and enter a contract address to view the verified case record.</p>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <section id="activity" class="activity-bar" aria-live="polite">
+        <div class="activity-main">
+          <span class="activity-indicator"></span>
+          <span id="activity-text" class="activity-text">Ready. Connect a wallet to begin.</span>
         </div>
-        <div class="actions">
-          <button id="create" class="button" disabled>Create case</button>
-          <button id="freeze" class="button" disabled>Freeze case</button>
-          <button id="assess" class="button accent" disabled>Assess notices</button>
-          <button id="retry" class="button" disabled>Retry unresolved</button>
+        <div id="tx-details" class="tx-details" hidden>
+          <span class="tx-label">Transaction:</span>
+          <code id="tx-hash" class="tx-hash"></code>
+          <button id="copy-tx" class="tx-btn" type="button">Copy ID</button>
+          <a id="explorer-link" class="tx-link" target="_blank" rel="noreferrer">View in Explorer</a>
+          <button id="resume" class="tx-btn tx-btn--resume" type="button" hidden>Check transaction status</button>
         </div>
       </section>
 
-      <section class="card readback-card">
-        <div class="section-heading"><span>02</span><h2>Authoritative readback</h2></div>
-        <div id="readback" class="readback empty">Connect a wallet and enter a deployed contract address.</div>
-        <button id="read" class="button" disabled>Read case</button>
-      </section>
-
-      <section id="activity" class="activity" aria-live="polite">
-        <span class="dot"></span><span id="activity-text">Ready. No transaction has been submitted.</span>
-        <span id="tx-details" class="tx-details" hidden>
-          <code id="tx-hash"></code><button id="copy-tx" type="button">Copy ID</button><a id="explorer-link" target="_blank" rel="noreferrer">View transaction</a><button id="resume" type="button">Reconcile pending</button>
-        </span>
-      </section>
+      <footer class="page-footer">
+        <p>School Closure Notice Arbiter · Powered by GenLayer Intelligent Contracts on Studionet</p>
+      </footer>
     </main>
+
     <dialog id="chooser" aria-labelledby="wallet-title">
       <form method="dialog" class="chooser-card">
-        <button class="close" value="cancel" aria-label="Close">×</button>
-        <p class="eyebrow">WALLET CONNECTION</p>
-        <h2 id="wallet-title">Choose a wallet</h2>
-        <p class="muted">Select the provider you want this task to use.</p>
-        <p id="wallet-error" class="error" role="alert" hidden></p>
+        <button class="close-btn close" value="cancel" aria-label="Close">×</button>
+        <div class="dialog-header">
+          <p class="dialog-eyebrow">STUDIONET WALLET ACCESS</p>
+          <h2 id="wallet-title" class="dialog-title">Choose a wallet</h2>
+          <p class="dialog-desc">Select an installed supported wallet to interact with Studionet.</p>
+        </div>
+        <p id="wallet-error" class="wallet-error error" role="alert" hidden></p>
         <div id="providers" class="provider-list"></div>
+        <p class="dialog-footer-note">Supported wallets: MetaMask, OKX Wallet, and Rabby.</p>
       </form>
     </dialog>
-    <script type="module" src="./app.js?v=20260831"></script>
+
+    <script type="module" src="./app.js?v=20260901"></script>
   </body>
 </html>
